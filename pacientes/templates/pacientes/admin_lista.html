@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pacientes - Hospital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+  background: #0f172a; 
+  color: #e2e8f0; 
+  font-family: 'Segoe UI', sans-serif; 
+  display: flex; 
+  min-height: 100vh;
+}
+
+.sidebar { 
+  width: 72px; 
+  background: #1e293b; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  padding: 20px 0; 
+  gap: 8px; 
+  flex-shrink: 0;
+  position: fixed;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+
+.sidebar a { 
+  width: 48px; 
+  height: 48px; 
+  border-radius: 12px; 
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  color: #94a3b8; 
+  text-decoration: none; 
+  font-size: 0.55rem; 
+  gap: 3px; 
+  transition: background .2s, color .2s; 
+}
+
+.sidebar a i { font-size: 1.2rem; }
+.sidebar a:hover { background: #334155; color: #f8fafc; }
+.sidebar a.active { background: #334155; color: #38bdf8; }
+
+.main { 
+  flex: 1; 
+  padding: 32px 36px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 24px;
+  margin-left: 72px;
+}
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.topbar h1 { font-size: 1.5rem; font-weight: 700; }
+
+/* STATS */
+.quick-stats { display: flex; gap: 16px; }
+.qstat { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 16px 22px; display: flex; align-items: center; gap: 14px; min-width: 160px; }
+.qstat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.qstat-label { font-size: .72rem; color: #64748b; }
+.qstat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+
+/* TABLA */
+.table-card { background: #1e293b; border-radius: 18px; border: 1px solid #334155; overflow: hidden; }
+.table-card table { width: 100%; border-collapse: collapse; }
+.table-card thead tr { background: #0f172a; border-bottom: 1px solid #334155; }
+.table-card thead th { padding: 14px 18px; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 600; }
+.table-card tbody tr { border-bottom: 1px solid #1e3a5f22; transition: background .15s; }
+.table-card tbody tr:hover { background: #273548; }
+.table-card tbody tr:last-child { border-bottom: none; }
+.table-card tbody td { padding: 13px 18px; font-size: .87rem; color: #cbd5e1; vertical-align: middle; }
+
+/* AVATAR */
+.avatar { width: 36px; height: 36px; border-radius: 10px; background: #1e3a5f; color: #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; margin-right: 10px; flex-shrink: 0; }
+.avatar-f { background: #2e1a47; color: #c084fc; }
+.nombre-cell { display: flex; align-items: center; }
+
+/* CHIPS */
+.chip-sangre { background: #450a1a; color: #fb7185; padding: 3px 9px; border-radius: 20px; font-size: .73rem; font-weight: 600; }
+.chip-m { background: #1e3a5f; color: #38bdf8; padding: 3px 9px; border-radius: 20px; font-size: .73rem; font-weight: 600; }
+.chip-f { background: #2e1a47; color: #c084fc; padding: 3px 9px; border-radius: 20px; font-size: .73rem; font-weight: 600; }
+.chip-o { background: #431c00; color: #fb923c; padding: 3px 9px; border-radius: 20px; font-size: .73rem; font-weight: 600; }
+
+/* BADGE ACTIVO */
+.badge-activo { padding: 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+.badge-si { background: #14432a; color: #4ade80; }
+.badge-no { background: #450a1a; color: #fb7185; }
+
+/* BOTONES */
+.btn-accion { width: 32px; height: 32px; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: .95rem; transition: opacity .2s; text-decoration: none; }
+.btn-accion:hover { opacity: .8; }
+.btn-edit { background: #1e3a5f; color: #38bdf8; }
+.btn-delete { background: #450a1a; color: #fb7185; }
+.btn-nuevo { background: #0ea5e9; color: white; border: none; border-radius: 12px; padding: 10px 20px; font-size: .88rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: background .2s; }
+.btn-nuevo:hover { background: #0284c7; color: white; }
+
+/* SEARCH */
+.search-bar { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; width: 300px; }
+.search-bar input { background: transparent; border: none; outline: none; color: #e2e8f0; width: 100%; font-size: .9rem; }
+.search-bar input::placeholder { color: #64748b; }
+.search-bar i { color: #64748b; }
+
+/* ALERTS */
+.alert { border-radius: 12px; padding: 12px 18px; font-size: .88rem; display: flex; align-items: center; gap: 8px; border: 1px solid; }
+.alert-error { background: #450a1a; color: #fb7185; border-color: #5a0f22; }
+.alert-success { background: #14432a; color: #4ade80; border-color: #166534; }
+.alert-warning { background: #431c00; color: #fbbf24; border-color: #92400e; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+.empty-state i { font-size: 3rem; margin-bottom: 12px; display: block; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/" class="active"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-error{% endif %}">
+        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}exclamation-circle{% endif %}"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="topbar">
+    <h1>Pacientes</h1>
+    <a href="{% url 'admin_nuevo_paciente' %}" class="btn-nuevo">
+      <i class="bi bi-plus-lg"></i> Nuevo Paciente
+    </a>
+  </div>
+
+  <div class="quick-stats">
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#1e3a5f; color:#38bdf8;"><i class="bi bi-person-heart"></i></div>
+      <div>
+        <div class="qstat-label">Total pacientes</div>
+        <div class="qstat-value" style="color:#38bdf8;">{{ pacientes|length }}</div>
+      </div>
+    </div>
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#14432a; color:#4ade80;"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="qstat-label">Activos</div>
+        <div class="qstat-value" style="color:#4ade80;">{{ total_activos }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div style="padding:16px 18px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:.85rem; color:#64748b;">{{ pacientes|length }} registro(s)</span>
+      <div class="search-bar">
+        <i class="bi bi-search"></i>
+        <input type="text" id="buscador" placeholder="Buscar paciente...">
+      </div>
+    </div>
+
+    <table id="tablaPacientes">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Paciente</th>
+          <th>Fecha Nac.</th>
+          <th>Sexo</th>
+          <th>Sangre</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>Activo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pacientes %}
+        <tr>
+          <td style="color:#64748b; font-size:.8rem;">{{ p.idpaciente }}</td>
+          <td>
+            <div class="nombre-cell">
+              <div class="avatar {% if p.sexo == 'F' %}avatar-f{% endif %}">
+                {{ p.nombre|first }}{{ p.apellido|first }}
+              </div>
+              <div>
+                <div style="font-weight:600; color:#f1f5f9;">{{ p.nombre }} {{ p.apellido }}</div>
+                <div style="font-size:.75rem; color:#64748b;">{{ p.cedula }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.fechanacimiento|date:"d/m/Y" }}</td>
+          <td>
+            {% if p.sexo == 'M' %}<span class="chip-m">Masculino</span>
+            {% elif p.sexo == 'F' %}<span class="chip-f">Femenino</span>
+            {% else %}<span class="chip-o">Otro</span>{% endif %}
+          </td>
+          <td>
+            {% if p.tiposangre %}
+              <span class="chip-sangre">{{ p.tiposangre }}</span>
+            {% else %}
+              <span style="color:#475569;">—</span>
+            {% endif %}
+          </td>
+          <td>{{ p.telefono|default:"—" }}</td>
+          <td style="color:#64748b; font-size:.82rem;">{{ p.email|default:"—" }}</td>
+          <td>
+            {% if p.activo %}
+              <span class="badge-activo badge-si"><i class="bi bi-check"></i> Sí</span>
+            {% else %}
+              <span class="badge-activo badge-no"><i class="bi bi-x"></i> No</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <a href="{% url 'admin_editar_paciente' p.idpaciente %}" class="btn-accion btn-edit" title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'admin_eliminar_paciente' p.idpaciente %}"
+                 class="btn-accion btn-delete" title="Eliminar"
+                 onclick="return confirm('¿Eliminar a {{ p.nombre }} {{ p.apellido }}? Esta acción también eliminará su usuario de acceso.')">
+                <i class="bi bi-trash"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="bi bi-person-x"></i>
+              No hay pacientes registrados aún.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  document.getElementById('buscador').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#tablaPacientes tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

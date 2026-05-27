@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Login - Hospital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f172a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .login-wrapper {
+    display: flex;
+    width: 860px;
+    min-height: 520px;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px #00000066;
+  }
+
+  /* PANEL IZQUIERDO */
+  .panel-left {
+    flex: 1;
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 36px;
+    gap: 16px;
+    border-right: 1px solid #334155;
+  }
+  .panel-left .hospital-logo {
+    font-size: 4rem;
+    margin-bottom: 8px;
+  }
+  .panel-left h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    text-align: center;
+  }
+  .panel-left p {
+    color: #64748b;
+    font-size: .88rem;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .roles-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    width: 100%;
+  }
+  .rol-chip {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .82rem;
+    color: #94a3b8;
+  }
+  .rol-chip i { font-size: 1rem; }
+
+  /* PANEL DERECHO */
+  .panel-right {
+    width: 380px;
+    background: #1e293b;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 40px;
+    gap: 24px;
+  }
+  .panel-right h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .panel-right p {
+    color: #64748b;
+    font-size: .85rem;
+    margin-top: -16px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #64748b;
+  }
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-wrap i {
+    position: absolute;
+    left: 14px;
+    color: #475569;
+    font-size: 1rem;
+  }
+  .input-wrap input {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px 14px 12px 40px;
+    color: #e2e8f0;
+    font-size: .9rem;
+    outline: none;
+    transition: border .2s;
+  }
+  .input-wrap input:focus { border-color: #38bdf8; }
+
+  .btn-login {
+    background: #0ea5e9;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: background .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-login:hover { background: #0284c7; }
+
+  .error-msg {
+    background: #450a1a;
+    color: #fb7185;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .83rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+  <!-- IZQUIERDA -->
+  <div class="panel-left">
+    <div class="hospital-logo"></div>
+    <h1>Sistema Hospitalario</h1>
+    <p>Plataforma de gestión integral para el personal médico y administrativo.</p>
+
+    <div class="roles-preview">
+      <div class="rol-chip"><i class="bi bi-shield-check" style="color:#38bdf8;"></i> Administrador — acceso total</div>
+      <div class="rol-chip"><i class="bi bi-person-badge" style="color:#c084fc;"></i> Médico — citas y pacientes</div>
+      <div class="rol-chip"><i class="bi bi-people" style="color:#4ade80;"></i> Empleado — gestión general</div>
+      <div class="rol-chip"><i class="bi bi-person-heart" style="color:#fb923c;"></i> Paciente — mis citas</div>
+    </div>
+  </div>
+
+  <!-- DERECHA -->
+  <div class="panel-right">
+    <div style="display:flex; flex-direction:column; gap:6px;">
+  	<h2 style="font-size:1.4rem; font-weight:700; color:#f1f5f9;">Bienvenido</h2>
+  <p style="color:#64748b; font-size:.85rem; margin:0;">Ingresa tus credenciales para continuar</p>
+	</div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="error-msg">
+          <i class="bi bi-exclamation-circle"></i> {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" style="display:flex; flex-direction:column; gap:18px;">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label>Cédula</label>
+        <div class="input-wrap">
+          <i class="bi bi-person"></i>
+          <input type="text" name="cedula" placeholder="Ej: 1234567890" autofocus required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock"></i>
+          <input type="password" name="password" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> Ingresar
+      </button>
+    </form>
+  </div>
+
+</div>
+
+</body>
+</html>

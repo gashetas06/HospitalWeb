@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mis Pacientes</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a; color: #e2e8f0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex; height: 100vh; overflow: hidden;
+  }
+  .sidebar {
+    width: 72px; background: #1e293b;
+    display: flex; flex-direction: column;
+    align-items: center; padding: 20px 0;
+    gap: 8px; flex-shrink: 0;
+  }
+  .sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+  .sidebar a {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #94a3b8; text-decoration: none;
+    font-size: 0.55rem; gap: 3px;
+    transition: background .2s, color .2s;
+  }
+  .sidebar a i { font-size: 1.2rem; }
+  .sidebar a:hover { background: #334155; color: #f8fafc; }
+  .sidebar a.active { background: #334155; color: #38bdf8; }
+
+  .main {
+    flex: 1; overflow-y: auto;
+    padding: 32px 36px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .topbar h1 { font-size: 1.5rem; font-weight: 700; }
+
+  .search-bar {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 12px; padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px; width: 280px;
+  }
+  .search-bar input {
+    background: transparent; border: none; outline: none;
+    color: #e2e8f0; width: 100%; font-size: .9rem;
+  }
+  .search-bar input::placeholder { color: #64748b; }
+  .search-bar i { color: #64748b; }
+
+  /* GRID DE CARDS */
+  .pacientes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .paciente-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform .2s, border-color .2s;
+  }
+  .paciente-card:hover {
+    transform: translateY(-3px);
+    border-color: #38bdf8;
+  }
+  .paciente-header {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .avatar {
+    width: 48px; height: 48px; border-radius: 13px;
+    background: #1e3a5f; color: #38bdf8;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.1rem; flex-shrink: 0;
+  }
+  .paciente-nombre { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+  .paciente-cedula { font-size: .78rem; color: #64748b; margin-top: 2px; }
+
+  .info-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .info-chip {
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; padding: 4px 10px;
+    font-size: .75rem; color: #94a3b8;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .info-chip i { font-size: .8rem; }
+
+  .sangre-chip {
+    background: #450a1a; color: #fb7185;
+    border-radius: 8px; padding: 4px 10px;
+    font-size: .75rem; font-weight: 700;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  .btn-ver-paciente {
+    background: #1e3a5f; color: #38bdf8;
+    border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: .82rem;
+    font-weight: 600; cursor: pointer;
+    text-decoration: none;
+    display: flex; align-items: center;
+    justify-content: center; gap: 6px;
+    transition: background .2s;
+  }
+  .btn-ver-paciente:hover { background: #1e4a7f; color: #38bdf8; }
+
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: #64748b;
+    grid-column: 1 / -1;
+  }
+  .empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="{% url 'dashboard_medico' %}">
+    <i class="bi bi-speedometer2"></i>Inicio
+  </a>
+  <a href="{% url 'mis_citas' %}">
+    <i class="bi bi-calendar-check"></i>Citas
+  </a>
+  <a href="{% url 'mis_pacientes' %}"  class="active">
+    <i class="bi bi-person-heart"></i>Pacientes
+  </a>
+  <a href="{% url 'mis_internaciones' %}">
+    <i class="bi bi-hospital"></i>Internados
+  </a>
+  <a href="{% url 'cambiar_password' %}">
+    <i class="bi bi-shield-lock"></i>Seguridad
+  </a>
+  <a href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-left"></i>Salir
+  </a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <h1>Mis Pacientes</h1>
+      <div style="font-size:.85rem; color:#64748b; margin-top:2px;">
+        Dr. {{ medico.nombre }} {{ medico.apellido }} · {{ total }} paciente(s)
+      </div>
+    </div>
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <input type="text" id="buscador" placeholder="Buscar paciente...">
+    </div>
+  </div>
+
+  <!-- GRID PACIENTES -->
+  <div class="pacientes-grid" id="gridPacientes">
+    {% for paciente in pacientes %}
+    <div class="paciente-card" data-nombre="{{ paciente.nombre }} {{ paciente.apellido }} {{ paciente.cedula }}">
+      <div class="paciente-header">
+        <div class="avatar">
+          {{ paciente.nombre|first }}{{ paciente.apellido|first }}
+        </div>
+        <div>
+          <div class="paciente-nombre">{{ paciente.nombre }} {{ paciente.apellido }}</div>
+          <div class="paciente-cedula"><i class="bi bi-person-vcard"></i> {{ paciente.cedula }}</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        {% if paciente.tiposangre %}
+        <span class="sangre-chip"><i class="bi bi-droplet-fill"></i> {{ paciente.tiposangre }}</span>
+        {% endif %}
+        {% if paciente.telefono %}
+        <span class="info-chip"><i class="bi bi-telephone"></i> {{ paciente.telefono }}</span>
+        {% endif %}
+        {% if paciente.sexo %}
+        <span class="info-chip">
+          <i class="bi bi-gender-{% if paciente.sexo == 'M' %}male{% else %}female{% endif %}"></i>
+          {% if paciente.sexo == 'M' %}Masculino{% else %}Femenino{% endif %}
+        </span>
+        {% endif %}
+        {% if paciente.fechanacimiento %}
+        <span class="info-chip"><i class="bi bi-cake"></i> {{ paciente.fechanacimiento }}</span>
+        {% endif %}
+      </div>
+
+      <a href="{% url 'ver_paciente' paciente.idpaciente %}" class="btn-ver-paciente">
+        <i class="bi bi-folder2-open"></i> Ver historial
+      </a>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <i class="bi bi-person-x"></i>
+      No tienes pacientes registrados aún.
+    </div>
+    {% endfor %}
+  </div>
+
+</main>
+
+<script>
+  document.getElementById('buscador').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.paciente-card').forEach(card => {
+      const nombre = card.dataset.nombre.toLowerCase();
+      card.style.display = nombre.includes(q) ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

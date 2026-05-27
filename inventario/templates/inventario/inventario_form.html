@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{% if item %}Editar{% else %}Nuevo{% endif %} Producto</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  body { background:#0f172a; color:#e2e8f0; font-family:'Segoe UI',sans-serif; display:flex; height:100vh; overflow:hidden; }
+  .sidebar { width:72px; background:#1e293b; display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:8px; flex-shrink:0; }
+  .sidebar .logo { font-size:1.6rem; margin-bottom:16px; }
+  .sidebar a { width:48px; height:48px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; text-decoration:none; font-size:0.55rem; gap:3px; transition:background .2s,color .2s; }
+  .sidebar a i { font-size:1.2rem; }
+  .sidebar a:hover { background:#334155; color:#f8fafc; }
+  .sidebar a.active { background:#334155; color:#38bdf8; }
+  .main { flex:1; overflow-y:auto; padding:40px; display:flex; align-items:center; justify-content:center; }
+  .form-card { background:#1e293b; border:1px solid #334155; border-radius:20px; padding:36px; width:100%; max-width:580px; }
+  .form-card h2 { font-size:1.3rem; font-weight:700; margin-bottom:24px; }
+  .form-group { margin-bottom:18px; }
+  .form-group label { font-size:.78rem; color:#64748b; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; background:#0f172a; border:1px solid #334155; border-radius:10px;
+    padding:10px 14px; color:#e2e8f0; font-size:.9rem; outline:none; transition:border .2s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color:#38bdf8; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .btn-guardar { background:#0ea5e9; color:white; border:none; border-radius:12px; padding:12px 28px; font-weight:600; cursor:pointer; width:100%; margin-top:8px; font-size:.95rem; transition:background .2s; }
+  .btn-guardar:hover { background:#0284c7; }
+  .btn-cancelar { display:block; text-align:center; margin-top:12px; color:#64748b; font-size:.85rem; text-decoration:none; }
+  .btn-cancelar:hover { color:#e2e8f0; }
+  .error-msg { background:#3b1e1e; border:1px solid #f87171; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:.85rem; color:#fca5a5; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/inventario/" class="active"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+</nav>
+<main class="main">
+  <div class="form-card">
+    <h2>{% if item %}Editar Producto{% else %}Nuevo Producto{% endif %}</h2>
+    {% if form.errors %}<div class="error-msg">{{ form.errors }}</div>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoría</label>{{ form.idcategoria }}
+        </div>
+        <div class="form-group">
+          <label>Unidad de Medida</label>{{ form.unidadmedida }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nombre del Producto</label>{{ form.nombreproducto }}
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cantidad Disponible</label>{{ form.cantidaddisponible }}
+        </div>
+        <div class="form-group">
+          <label>Nivel Crítico</label>{{ form.nivelcritico }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Precio Unitario</label>{{ form.preciounitario }}
+        </div>
+        <div class="form-group">
+          <label>Proveedor</label>{{ form.proveedor }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Última Entrada</label>{{ form.fechaultimaentrada }}
+      </div>
+      <button type="submit" class="btn-guardar"><i class="bi bi-floppy"></i> {% if item %}Guardar cambios{% else %}Guardar{% endif %}</button>
+      <a href="{% url 'lista_inventario' %}" class="btn-cancelar">← Cancelar</a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

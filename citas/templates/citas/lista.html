@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Citas - Hospital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+  background: #0f172a; 
+  color: #e2e8f0; 
+  font-family: 'Segoe UI', sans-serif; 
+  display: flex; 
+  min-height: 100vh;
+}
+
+.sidebar { 
+  width: 72px; 
+  background: #1e293b; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  padding: 20px 0; 
+  gap: 8px; 
+  flex-shrink: 0;
+  position: fixed;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+
+.sidebar a { 
+  width: 48px; 
+  height: 48px; 
+  border-radius: 12px; 
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  color: #94a3b8; 
+  text-decoration: none; 
+  font-size: 0.55rem; 
+  gap: 3px; 
+  transition: background .2s, color .2s; 
+}
+
+.sidebar a i { font-size: 1.2rem; }
+.sidebar a:hover { background: #334155; color: #f8fafc; }
+.sidebar a.active { background: #334155; color: #38bdf8; }
+
+.main { 
+  flex: 1; 
+  padding: 32px 36px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 24px;
+  margin-left: 72px;
+}  .topbar { display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 1.5rem; font-weight: 700; }
+  .search-bar { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; width: 280px; }
+  .search-bar input { background: transparent; border: none; outline: none; color: #e2e8f0; width: 100%; font-size: .9rem; }
+  .search-bar input::placeholder { color: #64748b; }
+  .search-bar i { color: #64748b; }
+
+  /* STATS */
+  .quick-stats { display: flex; gap: 16px; }
+  .qstat { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 16px 22px; display: flex; align-items: center; gap: 14px; flex: 1; }
+  .qstat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .qstat-label { font-size: .72rem; color: #64748b; }
+  .qstat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+
+  /* FILTROS */
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filtro-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; font-size: .8rem; text-decoration: none; transition: all .2s; }
+  .filtro-btn:hover { border-color: #38bdf8; color: #38bdf8; }
+  .filtro-btn.active { background: #1e3a5f; border-color: #38bdf8; color: #38bdf8; font-weight: 600; }
+
+  /* TABLA */
+  .table-card { background: #1e293b; border-radius: 18px; border: 1px solid #334155; overflow: hidden; }
+  .table-card table { width: 100%; border-collapse: collapse; }
+  .table-card thead tr { background: #0f172a; border-bottom: 1px solid #334155; }
+  .table-card thead th { padding: 14px 18px; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 600; }
+  .table-card tbody tr { border-bottom: 1px solid #1e3a5f22; transition: background .15s; }
+  .table-card tbody tr:hover { background: #273548; }
+  .table-card tbody tr:last-child { border-bottom: none; }
+  .table-card tbody td { padding: 14px 18px; font-size: .88rem; color: #cbd5e1; vertical-align: middle; }
+
+  /* BADGES ESTADO */
+  .badge-estado { padding: 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+  .badge-programada  { background: #1e3a5f; color: #38bdf8; }
+  .badge-confirmada  { background: #0d2a1a; color: #34d399; }
+  .badge-encurso     { background: #1e1a3b; color: #a78bfa; }
+  .badge-completada  { background: #14432a; color: #4ade80; }
+  .badge-cancelada   { background: #450a1a; color: #fb7185; }
+  .badge-noasistio   { background: #2d1f00; color: #fbbf24; }
+
+  /* BADGE TIPO */
+  .badge-tipo { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 3px 10px; border-radius: 20px; font-size: .73rem; }
+
+  /* AVATAR */
+  .avatar { width: 32px; height: 32px; border-radius: 8px; background: #1e3a5f; color: #38bdf8; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; margin-right: 8px; flex-shrink: 0; }
+  .nombre-cell { display: flex; align-items: center; }
+
+  /* BOTONES */
+  .btn-accion { width: 32px; height: 32px; border-radius: 8px; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: .95rem; transition: opacity .2s; text-decoration: none; }
+  .btn-accion:hover { opacity: .8; }
+  .btn-completar { background: #14432a; color: #4ade80; }
+  .btn-cancelar  { background: #450a1a; color: #fb7185; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+  .empty-state i { font-size: 3rem; margin-bottom: 12px; display: block; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/" class="active"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="background:{% if message.tags == 'success' %}#14432a{% else %}#431c00{% endif %};color:{% if message.tags == 'success' %}#4ade80{% else %}#fbbf24{% endif %};border-radius:12px;padding:12px 18px;font-size:.88rem;display:flex;align-items:center;gap:8px;border:1px solid {% if message.tags == 'success' %}#166534{% else %}#92400e{% endif %};">
+        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}"></i>{{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <h1>Citas</h1>
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <input type="text" id="buscador" placeholder="Buscar paciente, médico...">
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="quick-stats">
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#0d2a3a;color:#2dd4bf;"><i class="bi bi-calendar-day"></i></div>
+      <div>
+        <div class="qstat-label">Citas hoy</div>
+        <div class="qstat-value" style="color:#2dd4bf;">{{ total_hoy }}</div>
+      </div>
+    </div>
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#1e3a5f;color:#38bdf8;"><i class="bi bi-calendar-check"></i></div>
+      <div>
+        <div class="qstat-label">Programadas</div>
+        <div class="qstat-value" style="color:#38bdf8;">{{ total_programadas }}</div>
+      </div>
+    </div>
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#14432a;color:#4ade80;"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="qstat-label">Completadas</div>
+        <div class="qstat-value" style="color:#4ade80;">{{ total_completadas }}</div>
+      </div>
+    </div>
+    <div class="qstat">
+      <div class="qstat-icon" style="background:#1e293b;color:#94a3b8;"><i class="bi bi-list-ul"></i></div>
+      <div>
+        <div class="qstat-label">Mostrando</div>
+        <div class="qstat-value" style="color:#94a3b8;">{{ total }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <a href="?estado=todos"       class="filtro-btn {% if filtro == 'todos' %}active{% endif %}">Todas</a>
+    <a href="?estado=hoy"         class="filtro-btn {% if filtro == 'hoy' %}active{% endif %}"><i class="bi bi-calendar-day"></i> Hoy</a>
+    <a href="?estado=Programada"  class="filtro-btn {% if filtro == 'Programada' %}active{% endif %}">Programada</a>
+    <a href="?estado=Confirmada"  class="filtro-btn {% if filtro == 'Confirmada' %}active{% endif %}">Confirmada</a>
+    <a href="?estado=En curso"    class="filtro-btn {% if filtro == 'En curso' %}active{% endif %}">En curso</a>
+    <a href="?estado=Completada"  class="filtro-btn {% if filtro == 'Completada' %}active{% endif %}">Completada</a>
+    <a href="?estado=Cancelada"   class="filtro-btn {% if filtro == 'Cancelada' %}active{% endif %}">Cancelada</a>
+    <a href="?estado=No asistió"  class="filtro-btn {% if filtro == 'No asistió' %}active{% endif %}">No asistió</a>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-card">
+    <div style="padding:16px 18px;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:.85rem;color:#64748b;">{{ total }} registro(s)</span>
+    </div>
+    <table id="tablaCitas">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Paciente</th>
+          <th>Médico</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Notas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in citas %}
+        <tr>
+          <td style="color:#64748b;font-size:.8rem;">{{ c.idcita }}</td>
+
+          <td>
+            <div class="nombre-cell">
+              <div class="avatar">{{ c.idpaciente.nombre|first }}{{ c.idpaciente.apellido|first }}</div>
+              <div>
+                <div style="font-weight:600;color:#f1f5f9;">{{ c.idpaciente.nombre }} {{ c.idpaciente.apellido }}</div>
+                <div style="font-size:.75rem;color:#64748b;">{{ c.idpaciente.cedula }}</div>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div style="font-weight:500;color:#e2e8f0;">Dr. {{ c.idmedico.nombre }} {{ c.idmedico.apellido }}</div>
+            <div style="font-size:.75rem;color:#64748b;">{{ c.idmedico.idespecialidad.nombre }}</div>
+          </td>
+
+          <td style="color:#e2e8f0;">{{ c.fecha|date:"d/m/Y" }}</td>
+          <td style="color:#94a3b8;">{{ c.hora|time:"H:i" }}</td>
+
+          <td><span class="badge-tipo">{{ c.tipocita }}</span></td>
+
+          <td>
+            {% if c.estado == 'Programada' %}
+              <span class="badge-estado badge-programada"><i class="bi bi-clock"></i> Programada</span>
+            {% elif c.estado == 'Confirmada' %}
+              <span class="badge-estado badge-confirmada"><i class="bi bi-check"></i> Confirmada</span>
+            {% elif c.estado == 'En curso' %}
+              <span class="badge-estado badge-encurso"><i class="bi bi-activity"></i> En curso</span>
+            {% elif c.estado == 'Completada' %}
+              <span class="badge-estado badge-completada"><i class="bi bi-check-circle"></i> Completada</span>
+            {% elif c.estado == 'Cancelada' %}
+              <span class="badge-estado badge-cancelada"><i class="bi bi-x-circle"></i> Cancelada</span>
+            {% elif c.estado == 'No asistió' %}
+              <span class="badge-estado badge-noasistio"><i class="bi bi-person-x"></i> No asistió</span>
+            {% endif %}
+          </td>
+
+          <td style="color:#64748b;font-size:.82rem;">{{ c.notas|default:"—"|truncatechars:35 }}</td>
+
+          <td>
+            <div style="display:flex;gap:6px;">
+              {% if c.estado == 'Programada' or c.estado == 'Confirmada' or c.estado == 'En curso' %}
+                <form method="post" action="{% url 'completar_cita' c.idcita %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-accion btn-completar" title="Marcar completada"><i class="bi bi-check-lg"></i></button>
+                </form>
+                <form method="post" action="{% url 'cancelar_cita' c.idcita %}" onsubmit="return confirm('¿Cancelar esta cita?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-accion btn-cancelar" title="Cancelar"><i class="bi bi-x-lg"></i></button>
+                </form>
+              {% else %}
+                <span style="color:#334155;font-size:.8rem;">—</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="bi bi-calendar-x"></i>
+              No hay citas para mostrar.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  document.getElementById('buscador').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#tablaCitas tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

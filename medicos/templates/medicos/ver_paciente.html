@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Historial del Paciente</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a; color: #e2e8f0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex; height: 100vh; overflow: hidden;
+  }
+  .sidebar {
+    width: 72px; background: #1e293b;
+    display: flex; flex-direction: column;
+    align-items: center; padding: 20px 0;
+    gap: 8px; flex-shrink: 0;
+  }
+  .sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+  .sidebar a {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #94a3b8; text-decoration: none;
+    font-size: 0.55rem; gap: 3px;
+    transition: background .2s, color .2s;
+  }
+  .sidebar a i { font-size: 1.2rem; }
+  .sidebar a:hover { background: #334155; color: #f8fafc; }
+  .sidebar a.active { background: #334155; color: #38bdf8; }
+
+  .main {
+    flex: 1; overflow-y: auto;
+    padding: 32px 36px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .topbar h1 { font-size: 1.4rem; font-weight: 700; }
+
+  .card-dark {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 16px; padding: 24px;
+  }
+  .card-dark h3 {
+    font-size: .8rem; text-transform: uppercase;
+    letter-spacing: .1em; color: #64748b;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 4px; }
+  .field-label { font-size: .72rem; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+  .field-value { font-size: .92rem; color: #f1f5f9; font-weight: 500; }
+
+  .avatar-lg {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: #1e3a5f; color: #38bdf8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+  }
+  .paciente-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+  }
+
+  .badge-estado {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: .75rem; font-weight: 600;
+  }
+  .badge-Pendiente { background: #431c00; color: #fb923c; }
+  .badge-Atendido  { background: #14432a; color: #4ade80; }
+  .badge-Cancelado { background: #450a1a; color: #fb7185; }
+
+  .evolucion-item {
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+  }
+  .evolucion-fecha { font-size: .75rem; color: #64748b; margin-bottom: 10px; }
+  .evolucion-campo { margin-bottom: 10px; }
+  .evolucion-campo .label {
+    font-size: .72rem; color: #64748b;
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px;
+  }
+  .evolucion-campo .valor { font-size: .88rem; color: #cbd5e1; }
+
+  .cita-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: #0f172a;
+    border: 1px solid #334155; border-radius: 10px; margin-bottom: 8px;
+  }
+
+  .btn-back {
+    background: #1e293b; color: #94a3b8;
+    border: 1px solid #334155; border-radius: 10px;
+    padding: 10px 20px; font-size: .88rem;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-back:hover { color: #f1f5f9; }
+
+  .btn-accion {
+    padding: 5px 12px; border-radius: 8px;
+    font-size: .78rem; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: opacity .2s;
+  }
+  .btn-accion:hover { opacity: .8; }
+  .btn-ver { background: #1e3a5f; color: #38bdf8; }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px; color: #64748b;
+  }
+  .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="{% url 'dashboard_medico' %}">
+    <i class="bi bi-speedometer2"></i>Inicio
+  </a>
+  <a href="{% url 'mis_citas' %}">
+    <i class="bi bi-calendar-check"></i>Citas
+  </a>
+  <a href="{% url 'mis_pacientes' %}"  class="active">
+    <i class="bi bi-person-heart"></i>Pacientes
+  </a>
+  <a href="{% url 'mis_internaciones' %}">
+    <i class="bi bi-hospital"></i>Internados
+  </a>
+  <a href="{% url 'cambiar_password' %}">
+    <i class="bi bi-shield-lock"></i>Seguridad
+  </a>
+  <a href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-left"></i>Salir
+  </a>
+</nav>
+
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <h1>Historial del Paciente</h1>
+      <div style="font-size:.85rem; color:#64748b; margin-top:2px;">
+        Dr. {{ medico.nombre }} {{ medico.apellido }}
+      </div>
+    </div>
+    <a href="{% url 'mis_pacientes' %}" class="btn-back">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <!-- INFO PACIENTE -->
+  <div class="card-dark">
+    <h3><i class="bi bi-person-heart"></i> Datos del Paciente</h3>
+    <div class="paciente-header">
+      <div class="avatar-lg">
+        {{ paciente.nombre|first }}{{ paciente.apellido|first }}
+      </div>
+      <div>
+        <div style="font-size:1.2rem; font-weight:700; color:#f1f5f9;">
+          {{ paciente.nombre }} {{ paciente.apellido }}
+        </div>
+        <div style="font-size:.82rem; color:#64748b;">Cédula: {{ paciente.cedula }}</div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="field-group">
+        <span class="field-label">Teléfono</span>
+        <span class="field-value">{{ paciente.telefono|default:"—" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Email</span>
+        <span class="field-value">{{ paciente.email|default:"—" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Tipo de sangre</span>
+        <span class="field-value">{{ paciente.tiposangre|default:"—" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Fecha nacimiento</span>
+        <span class="field-value">{{ paciente.fechanacimiento }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Sexo</span>
+        <span class="field-value">{% if paciente.sexo == 'M' %}Masculino{% else %}Femenino{% endif %}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Dirección</span>
+        <span class="field-value">{{ paciente.direccion|default:"—" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIA CLÍNICA -->
+  {% if historia %}
+  <div class="card-dark">
+    <h3><i class="bi bi-clipboard2-pulse"></i> Historia Clínica</h3>
+    <div class="grid-2">
+      <div class="field-group">
+        <span class="field-label">Alergias</span>
+        <span class="field-value">{{ historia.alergias|default:"Sin alergias" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Antecedentes personales</span>
+        <span class="field-value">{{ historia.antecedentespersonales|default:"—" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Antecedentes familiares</span>
+        <span class="field-value">{{ historia.antecedentesfamiliares|default:"—" }}</span>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Observaciones</span>
+        <span class="field-value">{{ historia.observaciones|default:"—" }}</span>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="card-dark">
+    <div class="empty-state">
+      <i class="bi bi-clipboard2-x"></i>
+      Sin historia clínica registrada.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- EVOLUCIONES -->
+  <div class="card-dark">
+    <h3><i class="bi bi-journal-medical"></i> Evoluciones clínicas ({{ evoluciones|length }})</h3>
+    {% for ev in evoluciones %}
+    <div class="evolucion-item">
+      <div class="evolucion-fecha">
+        <i class="bi bi-clock"></i> {{ ev.fecha }}
+      </div>
+      <div class="grid-2">
+        <div class="evolucion-campo">
+          <div class="label">Motivo de consulta</div>
+          <div class="valor">{{ ev.motivoconsulta }}</div>
+        </div>
+        {% if ev.diagnostico %}
+        <div class="evolucion-campo">
+          <div class="label">Diagnóstico</div>
+          <div class="valor">{{ ev.diagnostico }}</div>
+        </div>
+        {% endif %}
+        {% if ev.tratamiento %}
+        <div class="evolucion-campo">
+          <div class="label">Tratamiento</div>
+          <div class="valor">{{ ev.tratamiento }}</div>
+        </div>
+        {% endif %}
+        {% if ev.receta %}
+        <div class="evolucion-campo">
+          <div class="label">Receta</div>
+          <div class="valor">{{ ev.receta }}</div>
+        </div>
+        {% endif %}
+        {% if ev.proximarevision %}
+        <div class="evolucion-campo">
+          <div class="label">Próxima revisión</div>
+          <div class="valor">{{ ev.proximarevision }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <i class="bi bi-journal-x"></i>
+      Sin evoluciones registradas.
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CITAS CON ESTE MÉDICO -->
+  <div class="card-dark">
+    <h3><i class="bi bi-calendar-check"></i> Citas con este médico ({{ citas|length }})</h3>
+    {% for cita in citas %}
+    <div class="cita-row">
+      <div style="display:flex; gap:16px; align-items:center;">
+        <div>
+          <div style="font-size:.88rem; font-weight:600; color:#f1f5f9;">{{ cita.fecha }} — {{ cita.hora }}</div>
+          <div style="font-size:.75rem; color:#64748b;">{{ cita.tipocita }} · {{ cita.duracionminutos }} min</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="badge-estado badge-{{ cita.estado }}">{{ cita.estado }}</span>
+        <a href="{% url 'ver_cita' cita.idcita %}" class="btn-accion btn-ver">
+          <i class="bi bi-eye"></i> Ver
+        </a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <i class="bi bi-calendar-x"></i>
+      Sin citas registradas.
+    </div>
+    {% endfor %}
+  </div>
+
+</main>
+</body>
+</html>

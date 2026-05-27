@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Nueva Internación — Admin</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  .sidebar { width: 72px; background: #1e293b; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 8px; flex-shrink: 0; }
+  .sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+  .sidebar a { width: 48px; height: 48px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; font-size: 0.55rem; gap: 3px; transition: background .2s, color .2s; }
+  .sidebar a i { font-size: 1.2rem; }
+  .sidebar a:hover { background: #334155; color: #f8fafc; }
+  .sidebar a.active { background: #334155; color: #38bdf8; }
+
+  .main { flex: 1; overflow-y: auto; padding: 32px 36px; display: flex; flex-direction: column; gap: 22px; align-items: center; }
+
+  .topbar { width: 100%; max-width: 780px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 1.4rem; font-weight: 700; }
+  .topbar .sub { font-size: .82rem; color: #64748b; margin-top: 3px; }
+
+  .form-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 32px; width: 100%; max-width: 780px; }
+  .section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #38bdf8; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #1e3a5f; display: flex; align-items: center; gap: 8px; }
+  .spacer { margin-bottom: 22px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: .75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; font-weight: 500; }
+  .form-group select,
+  .form-group input,
+  .form-group textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; color: #e2e8f0; font-size: .88rem; outline: none; transition: border .2s; font-family: 'Segoe UI', sans-serif; }
+  .form-group select:focus,
+  .form-group input:focus,
+  .form-group textarea:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px #38bdf81a; }
+  .form-group select option { background: #1e293b; }
+  textarea { resize: vertical; min-height: 90px; }
+
+  /* GRID DE CAMAS */
+  .camas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; margin-top: 4px; }
+  .cama-opt { background: #0f172a; border: 2px solid #334155; border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: border .2s, background .2s; }
+  .cama-opt input[type="radio"] { display: none; }
+  .cama-opt:hover { border-color: #38bdf8; background: #0f2a3f; }
+  .cama-opt.selected { border-color: #38bdf8; background: #0f2a3f; }
+  .cama-num  { font-size: .95rem; font-weight: 700; color: #38bdf8; }
+  .cama-depto{ font-size: .72rem; color: #64748b; margin-top: 2px; }
+  .cama-tipo { font-size: .72rem; color: #c084fc; margin-top: 2px; }
+  .cama-cost { font-size: .72rem; color: #4ade80; margin-top: 4px; }
+
+  .no-camas { background: #431c00; border: 1px solid #7c3100; border-radius: 12px; padding: 16px 20px; color: #fb923c; display: flex; align-items: center; gap: 12px; font-size: .86rem; }
+
+  .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+  .btn-guardar { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #0f172a; border: none; border-radius: 12px; padding: 11px 28px; font-size: .9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s; }
+  .btn-guardar:hover { opacity: .85; }
+  .btn-cancelar { background: transparent; color: #64748b; border: 1px solid #334155; border-radius: 12px; padding: 11px 22px; font-size: .88rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .2s; }
+  .btn-cancelar:hover { background: #0f172a; color: #e2e8f0; }
+
+  .messages { width: 100%; max-width: 780px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { padding: 10px 16px; border-radius: 10px; font-size: .84rem; display: flex; align-items: center; gap: 10px; }
+  .msg-error   { background: #450a1a; color: #fb7185; border: 1px solid #9f1239; }
+  .msg-success { background: #14432a; color: #4ade80; border: 1px solid #166534; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"> <i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"> <i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/" class="active"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+
+  {% if messages %}
+  <div class="messages">
+    {% for msg in messages %}
+    <div class="msg {% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+      <i class="bi {% if msg.tags == 'error' %}bi-exclamation-circle{% else %}bi-check-circle{% endif %}"></i>
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="topbar">
+    <div>
+      <h1></i>Nueva Internación</h1>
+      <div class="sub">Administración — registrar hospitalización manualmente</div>
+    </div>
+    <a href="/internacion/" class="btn-cancelar"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+
+  <form method="POST" style="width:100%; max-width:780px;">
+    {% csrf_token %}
+    <div class="form-card">
+
+      <!-- PACIENTE Y MÉDICO -->
+      <div class="section-title"><i class="bi bi-person-circle"></i> Paciente y médico responsable</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paciente *</label>
+          <select name="idpaciente_id" required>
+            <option value="">— Selecciona un paciente —</option>
+            {% for p in pacientes %}
+            <option value="{{ p.idpaciente }}">{{ p.nombre }} {{ p.apellido }} — {{ p.cedula }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Médico tratante *</label>
+          <select name="idmedicotratante_id" required>
+            <option value="">— Selecciona un médico —</option>
+            {% for m in medicos %}
+            <option value="{{ m.idmedico }}">Dr. {{ m.nombre }} {{ m.apellido }} — {{ m.idespecialidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Motivo de ingreso *</label>
+        <textarea name="motivoingreso" placeholder="Describe el motivo de hospitalización, síntomas, diagnóstico inicial..." required></textarea>
+      </div>
+
+      <!-- CAMA -->
+      <div class="spacer"></div>
+      <div class="section-title"><i class="bi bi-hospital"></i> Asignación de cama</div>
+
+      {% if camas_libres %}
+      <div class="form-group">
+        <label>Selecciona una cama libre *</label>
+        <div class="camas-grid" id="camasGrid">
+          {% for cama in camas_libres %}
+          <label class="cama-opt" id="cama-lbl-{{ cama.idcama }}" onclick="selCama({{ cama.idcama }}, this)">
+            <input type="radio" name="idcama" value="{{ cama.idcama }}" required>
+            <div class="cama-num"><i class="bi bi-hospital-fill me-1"></i>{{ cama.numero }}</div>
+            <div class="cama-depto">{{ cama.iddepartamento.nombre }}</div>
+            <div class="cama-tipo">{{ cama.idtipo.descripcion }}</div>
+            <div class="cama-cost">${{ cama.idtipo.costodiario }}/día</div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="no-camas">
+        <i class="bi bi-exclamation-triangle" style="font-size:1.3rem;"></i>
+        <div><strong>Sin camas disponibles.</strong> Todas las camas están ocupadas o en mantenimiento.</div>
+      </div>
+      {% endif %}
+
+      <div class="btn-row" style="margin-top:28px;">
+        {% if camas_libres %}
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-hospital"></i> Registrar internación
+        </button>
+        {% endif %}
+        <a href="/internacion/" class="btn-cancelar">Cancelar</a>
+      </div>
+
+    </div>
+  </form>
+</main>
+
+<script>
+function selCama(id, el) {
+  document.querySelectorAll('.cama-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+</script>
+</body>
+</html>

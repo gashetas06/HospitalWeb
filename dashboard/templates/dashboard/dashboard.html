@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - Hospital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 72px;
+    background: #1e293b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .sidebar .logo {
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+  }
+  .sidebar a {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.55rem;
+    gap: 3px;
+    transition: background .2s, color .2s;
+  }
+  .sidebar a i { font-size: 1.2rem; }
+  .sidebar a:hover, .sidebar a.active {
+    background: #334155;
+    color: #f8fafc;
+  }
+  .sidebar a.active { color: #38bdf8; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 36px;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  .topbar h1 { font-size: 1.5rem; font-weight: 700; }
+  .topbar .badge-time {
+    background: #1e293b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: .82rem;
+    color: #94a3b8;
+  }
+
+  /* ── MODULE GRID ── */
+  .section-label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .module-card {
+    background: #1e293b;
+    border-radius: 18px;
+    padding: 24px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform .2s, background .2s;
+    text-decoration: none;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+  }
+  .module-card:hover {
+    transform: translateY(-4px);
+    background: #273548;
+    color: #f8fafc;
+  }
+  .module-icon {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+  }
+  .module-card span { font-size: .88rem; font-weight: 500; text-align: center; }
+
+  /* Colores íconos */
+  .ic-blue   { background: #1e3a5f; color: #38bdf8; }
+  .ic-green  { background: #14432a; color: #4ade80; }
+  .ic-purple { background: #2e1a47; color: #c084fc; }
+  .ic-orange { background: #431c00; color: #fb923c; }
+  .ic-teal   { background: #0d3a3a; color: #2dd4bf; }
+  .ic-rose   { background: #450a1a; color: #fb7185; }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+  }
+  .stat-card {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 20px 22px;
+    border: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform .2s;
+  }
+  .stat-card:hover { transform: translateY(-3px); }
+  .stat-icon {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .stat-info .label {
+    font-size: .75rem;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+  .stat-info .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .val-blue   { color: #38bdf8; }
+  .val-green  { color: #4ade80; }
+  .val-purple { color: #c084fc; }
+  .val-orange { color: #fb923c; }
+  .val-teal   { color: #2dd4bf; }
+  .val-rose   { color: #fb7185; }
+  .val-yellow { color: #fbbf24; }
+  .val-indigo { color: #818cf8; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/" class="active"> <i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"> <i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- TOPBAR -->
+  <div class="topbar">
+    <h1>Inicio</h1>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="badge-time"><i class="bi bi-clock me-1"></i>Dashboard administrativo</span>
+      <a href="{% url 'logout' %}" style="background:#450a1a; color:#fb7185; border:none; border-radius:10px; padding:8px 16px; font-size:.82rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+        <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+      </a>
+    </div>
+  </div>
+
+  <!-- MÓDULOS -->
+<p class="section-label">Módulos</p>
+<div class="modules-grid">
+  <a href="/pacientes/" class="module-card">
+    <div class="module-icon ic-blue">
+      <i class="bi bi-person-heart" style="font-size:2rem;"></i>
+    </div>
+    <span>Paciente</span>
+  </a>
+  <a href="/medicos/" class="module-card">
+    <div class="module-icon ic-green">
+      <i class="bi bi-person-badge" style="font-size:2rem;"></i>
+    </div>
+    <span>Médico</span>
+  </a>
+  <a href="/empleados/" class="module-card">
+    <div class="module-icon ic-purple">
+      <i class="bi bi-people-fill" style="font-size:2rem;"></i>
+    </div>
+    <span>Empleado</span>
+  </a>
+  <a href="/inventario/" class="module-card">
+    <div class="module-icon ic-orange">
+      <i class="bi bi-box-seam" style="font-size:2rem;"></i>
+    </div>
+    <span>Inventario</span>
+  </a>
+  <a href="/internacion/" class="module-card">
+    <div class="module-icon ic-teal">
+      <i class="bi bi-hospital" style="font-size:2rem;"></i>
+    </div>
+    <span>Internación</span>
+  </a>
+  <a href="/facturas/" class="module-card">
+    <div class="module-icon ic-rose">
+      <i class="bi bi-receipt-cutoff" style="font-size:2rem;"></i>
+    </div>
+    <span>Factura</span>
+  </a>
+</div>
+
+  <!-- ESTADÍSTICAS -->
+  <p class="section-label">Estadísticas en tiempo real</p>
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-icon ic-blue"><i class="bi bi-person-check"></i></div>
+      <div class="stat-info">
+        <div class="label">Pacientes activos</div>
+        <div class="value val-blue">{{ pacientes_activos }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon ic-green"><i class="bi bi-person-badge"></i></div>
+      <div class="stat-info">
+        <div class="label">Médicos activos</div>
+        <div class="value val-green">{{ medicos_activos }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon ic-purple"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-info">
+        <div class="label">Empleados activos</div>
+        <div class="value val-purple">{{ empleados_activos }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon ic-teal"><i class="bi bi-calendar-check"></i></div>
+      <div class="stat-info">
+        <div class="label">Citas hoy</div>
+        <div class="value val-teal">{{ citas_hoy }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon ic-orange"><i class="bi bi-hospital"></i></div>
+      <div class="stat-info">
+        <div class="label">Internados</div>
+        <div class="value val-orange">{{ internados }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#0d2a1a; color:#34d399;"><i class="bi bi-door-closed"></i></div>
+      <div class="stat-info">
+        <div class="label">Camas libres</div>
+        <div class="value val-green">{{ camas_libres }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#431c00; color:#fbbf24;"><i class="bi bi-exclamation-triangle"></i></div>
+      <div class="stat-info">
+        <div class="label">Productos críticos</div>
+        <div class="value val-yellow">{{ productos_criticos }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#2a1a45; color:#818cf8;"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="stat-info">
+        <div class="label">Facturas pendientes</div>
+        <div class="value val-indigo">{{ facturas_pendientes }}</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

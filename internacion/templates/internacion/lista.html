@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Internaciones</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  body { background:#0f172a; color:#e2e8f0; font-family:'Segoe UI',sans-serif; display:flex; min-height:100vh; }
+  .sidebar { width:72px; background:#1e293b; display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:8px; flex-shrink:0; position:fixed; height:100vh; z-index:100; }
+  .sidebar .logo { font-size:1.6rem; margin-bottom:16px; }
+  .sidebar a { width:48px; height:48px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; text-decoration:none; font-size:0.55rem; gap:3px; transition:background .2s,color .2s; }
+  .sidebar a i { font-size:1.2rem; }
+  .sidebar a:hover { background:#334155; color:#f8fafc; }
+  .sidebar a.active { background:#334155; color:#38bdf8; }
+  .main { flex:1; margin-left:72px; padding:40px; }
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+  .page-header h1 { font-size:1.6rem; font-weight:700; margin:0; }
+  .section-label { font-size:.78rem; color:#38bdf8; text-transform:uppercase; letter-spacing:.1em; font-weight:700; margin:28px 0 12px; display:flex; align-items:center; gap:8px; }
+  .section-label::after { content:''; flex:1; height:1px; background:#1e3a4a; }
+  .stat-pill { background:#1e293b; border:1px solid #334155; border-radius:999px; padding:6px 16px; font-size:.8rem; color:#94a3b8; }
+  .stat-pill span { color:#f87171; font-weight:700; }
+  .btn-nuevo { background:#0ea5e9; color:white; border:none; border-radius:12px; padding:10px 20px; font-weight:600; font-size:.9rem; text-decoration:none; display:flex; align-items:center; gap:6px; }
+  .btn-nuevo:hover { background:#0284c7; color:white; }
+  .table-card { background:#1e293b; border:1px solid #334155; border-radius:20px; overflow:hidden; margin-bottom:32px; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { background:#0f172a; padding:14px 18px; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#64748b; }
+  tbody tr { border-top:1px solid #1e293b; transition:background .15s; }
+  tbody tr:hover { background:#243044; }
+  tbody td { padding:13px 18px; font-size:.88rem; vertical-align:middle; }
+  .badge-activa { background:#0c2a1f; color:#34d399; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .badge-egreso { background:#1e293b; color:#64748b; padding:3px 10px; border-radius:999px; font-size:.75rem; }
+  .btn-accion { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; font-size:.9rem; cursor:pointer; transition:background .2s; text-decoration:none; }
+  .btn-alta { background:#064e3b; color:#34d399; }
+  .btn-alta:hover { background:#059669; color:white; }
+  .btn-del { background:#3b1e1e; color:#f87171; }
+  .btn-del:hover { background:#dc2626; color:white; }
+  .alert-msg { background:#1e3a4a; border:1px solid #38bdf8; border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:.85rem; color:#7dd3fc; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/" class="active"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>Internaciones</h1>
+      <div class="stat-pill" style="margin-top:8px;">Activas: <span>{{ total_activas }}</span></div>
+    </div>
+    <a href="{% url 'nueva_internacion' %}" class="btn-nuevo"><i class="bi bi-plus-lg"></i> Nueva Internación</a>
+  </div>
+
+  {% if messages %}{% for msg in messages %}<div class="alert-msg">{{ msg }}</div>{% endfor %}{% endif %}
+
+  <div class="section-label">Internaciones Activas</div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Paciente</th>
+          <th>Cama</th>
+          <th>Departamento</th>
+          <th>Médico ID</th>
+          <th>F. Ingreso</th>
+          <th>Motivo</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in activas %}
+        <tr>
+          <td><strong>#{{ row.internacion.idinternacion }}</strong></td>
+          <td>{% if row.paciente %}{{ row.paciente }}{% else %}ID {{ row.internacion.idpaciente_id }}{% endif %}</td>
+          <td>{{ row.internacion.idcama.numero }}</td>
+          <td>{{ row.internacion.idcama.iddepartamento.nombre }}</td>
+          <td>{{ row.internacion.idmedicotratante_id }}</td>
+          <td>{{ row.internacion.fechaingreso|date:"d/m/Y H:i" }}</td>
+          <td>{{ row.internacion.motivoingreso|truncatechars:40 }}</td>
+          <td><span class="badge-activa"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> Activa</span></td>
+          <td style="display:flex;gap:6px;">
+            <a href="{% url 'dar_alta_admin' row.internacion.idinternacion %}" class="btn-accion btn-alta" title="Dar Alta"><i class="bi bi-box-arrow-right"></i></a>
+            <form method="post" action="{% url 'eliminar_internacion' row.internacion.idinternacion %}" onsubmit="return confirm('¿Eliminar internación?')">
+              {% csrf_token %}<button type="submit" class="btn-accion btn-del"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="9" style="text-align:center;padding:30px;color:#475569;">No hay internaciones activas</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label">Historial (últimas 20)</div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Paciente</th>
+          <th>Cama</th>
+          <th>F. Ingreso</th>
+          <th>F. Egreso</th>
+          <th>Diagnóstico</th>
+          <th>Condición</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in historial %}
+        <tr>
+          <td>#{{ row.internacion.idinternacion }}</td>
+          <td>{% if row.paciente %}{{ row.paciente }}{% else %}ID {{ row.internacion.idpaciente_id }}{% endif %}</td>
+          <td>{{ row.internacion.idcama.numero }}</td>
+          <td>{{ row.internacion.fechaingreso|date:"d/m/Y" }}</td>
+          <td>{{ row.internacion.fechaegreso|date:"d/m/Y" }}</td>
+          <td>{{ row.internacion.diagnosticoegreso|default:"-"|truncatechars:40 }}</td>
+          <td><span class="badge-egreso">{{ row.internacion.condicionegreso|default:"-" }}</span></td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="7" style="text-align:center;padding:30px;color:#475569;">Sin historial</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

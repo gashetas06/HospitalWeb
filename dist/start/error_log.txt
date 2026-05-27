@@ -1,0 +1,11 @@
+=== Inicio ===
+BASE_DIR: C:\Users\tugfa\OneDrive\Desktop\HospitalWeb\dist\start\_internal
+sys.path: ['C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal']
+Iniciando servidor Django...
+Servidor listo.
+=== Inicio ===
+BASE_DIR: C:\Users\tugfa\OneDrive\Desktop\HospitalWeb\dist\start\_internal
+sys.path: ['C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal', 'C:\\Users\\tugfa\\OneDrive\\Desktop\\HospitalWeb\\dist\\start\\_internal']
+Esperando servidor...
+Iniciando servidor Django...
+Servidor listo.

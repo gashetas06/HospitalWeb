@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{% if paciente %}Editar Paciente{% else %}Nuevo Paciente{% endif %} - Hospital</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; display: flex; min-height: 100vh; }
+
+  .sidebar { width: 72px; background: #1e293b; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 8px; flex-shrink: 0; position: fixed; height: 100vh; top: 0; left: 0; z-index: 100; }
+  .sidebar .logo { font-size: 1.6rem; margin-bottom: 16px; }
+  .sidebar a { width: 48px; height: 48px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; font-size: 0.55rem; gap: 3px; transition: background .2s, color .2s; }
+  .sidebar a i { font-size: 1.2rem; }
+  .sidebar a:hover { background: #334155; color: #f8fafc; }
+  .sidebar a.active { background: #334155; color: #38bdf8; }
+
+  .main { flex: 1; margin-left: 72px; padding: 32px 36px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  .topbar { width: 100%; max-width: 780px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 1.4rem; font-weight: 700; }
+  .topbar .sub { font-size: .82rem; color: #64748b; margin-top: 3px; }
+
+  .messages { width: 100%; max-width: 780px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { padding: 10px 16px; border-radius: 10px; font-size: .84rem; display: flex; align-items: center; gap: 10px; }
+  .msg-error   { background: #450a1a; color: #fb7185; border: 1px solid #9f1239; }
+  .msg-success { background: #14432a; color: #4ade80; border: 1px solid #166534; }
+
+  .form-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 32px; width: 100%; max-width: 780px; }
+
+  .edit-badge { border-radius: 10px; padding: 8px 14px; font-size: .78rem; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .edit-badge.editar { background: #431c00; border: 1px solid #7c3100; color: #fb923c; }
+  .edit-badge.nuevo  { background: #1e3a5f; border: 1px solid #1d4ed8; color: #38bdf8; }
+
+  .section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid; display: flex; align-items: center; gap: 8px; }
+  .section-title.azul   { color: #38bdf8; border-color: #1e3a5f; }
+  .section-title.verde  { color: #4ade80; border-color: #14432a; }
+  .section-title.rosa   { color: #fb7185; border-color: #450a1a; }
+  .section-title.morado { color: #c084fc; border-color: #2e1a47; }
+
+  .spacer { margin-bottom: 22px; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .fg { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+  .fg label { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; font-weight: 600; }
+  .req { color: #fb7185; }
+  .hint { font-size: .73rem; color: #64748b; }
+  .field-error { font-size: .73rem; color: #fb7185; display: none; margin-top: 2px; }
+  .field-error.visible { display: block; }
+
+  .iw { position: relative; display: flex; align-items: center; flex-direction: column; align-items: stretch; }
+  .iw .ic { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #475569; font-size: .9rem; pointer-events: none; z-index: 1; }
+  .iw input,
+  .iw select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 11px 14px 11px 38px; color: #e2e8f0; font-size: .88rem; outline: none; transition: border .2s, box-shadow .2s; font-family: 'Segoe UI', sans-serif; }
+  .iw input:focus, .iw select:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px #38bdf818; }
+  .iw input.error, .iw select.error { border-color: #fb7185 !important; }
+  .iw select { appearance: none; cursor: pointer; }
+  .iw select option { background: #1e293b; }
+  .iw input[readonly] { opacity: .55; cursor: not-allowed; }
+
+  .btn-row { display: flex; gap: 12px; margin-top: 12px; }
+  .btn-guardar-nuevo  { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #0f172a; }
+  .btn-guardar-editar { background: linear-gradient(135deg, #ea580c, #fb923c); color: #0f172a; }
+  .btn-guardar-nuevo, .btn-guardar-editar { border: none; border-radius: 12px; padding: 11px 28px; font-size: .9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s; }
+  .btn-guardar-nuevo:hover, .btn-guardar-editar:hover { opacity: .85; }
+  .btn-cancelar { background: transparent; color: #64748b; border: 1px solid #334155; border-radius: 12px; padding: 11px 22px; font-size: .88rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .2s; }
+  .btn-cancelar:hover { background: #0f172a; color: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/admin" class="active"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+
+  <div class="topbar">
+    <div>
+      <h1>{% if paciente %}Editar Paciente{% else %}Nuevo Paciente{% endif %}</h1>
+      <div class="sub">
+        {% if paciente %}Modificando datos de {{ paciente.nombre }} {{ paciente.apellido }}
+        {% else %}Registrar un nuevo paciente en el sistema{% endif %}
+      </div>
+    </div>
+    <a href="{% url 'admin_lista_pacientes' %}" class="btn-cancelar">
+      <i class="bi bi-arrow-left"></i> Volver a la lista
+    </a>
+  </div>
+
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div class="msg {% if message.tags == 'success' %}msg-success{% else %}msg-error{% endif %}">
+      <i class="bi bi-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if form.errors %}
+  <div class="messages">
+    {% for field, errors in form.errors.items %}
+      {% for error in errors %}
+      <div class="msg msg-error"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="form-card">
+
+    {% if paciente %}
+    <div class="edit-badge editar">
+      <i class="bi bi-pencil-square"></i>
+      Editando: <strong>{{ paciente.nombre }} {{ paciente.apellido }}</strong> — Cédula: {{ paciente.cedula }}
+    </div>
+    {% else %}
+    <div class="edit-badge nuevo">
+      <i class="bi bi-person-plus"></i>
+      Nuevo registro de paciente — completa todos los campos obligatorios
+    </div>
+    {% endif %}
+
+    <form method="post" id="formPaciente" novalidate>
+      {% csrf_token %}
+
+      <!-- IDENTIFICACIÓN -->
+      <div class="section-title azul"><i class="bi bi-person-vcard"></i> Identificación</div>
+      <div class="g3" style="margin-bottom:22px;">
+        <div class="fg">
+          <label>Cédula <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-card-text"></i>
+            <input type="text" name="cedula" id="cedula" maxlength="20" required
+                   placeholder="Ej: PAC001"
+                   value="{{ paciente.cedula|default:values.cedula|default:'' }}"
+                   {% if paciente %}readonly{% endif %}>
+          </div>
+          {% if paciente %}<span class="hint">La cédula no puede modificarse</span>{% endif %}
+          <div class="field-error" id="err-cedula">Solo letras y números, sin espacios.</div>
+        </div>
+        <div class="fg">
+          <label>Nombre <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-person"></i>
+            <input type="text" name="nombre" id="nombre" maxlength="100" required
+                   placeholder="Primer nombre"
+                   value="{{ paciente.nombre|default:values.nombre|default:'' }}">
+          </div>
+          <div class="field-error" id="err-nombre">Solo se permiten letras.</div>
+        </div>
+        <div class="fg">
+          <label>Apellido <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-person"></i>
+            <input type="text" name="apellido" id="apellido" maxlength="100" required
+                   placeholder="Apellido paterno"
+                   value="{{ paciente.apellido|default:values.apellido|default:'' }}">
+          </div>
+          <div class="field-error" id="err-apellido">Solo se permiten letras.</div>
+        </div>
+      </div>
+
+      <!-- DATOS PERSONALES -->
+      <div class="section-title verde"><i class="bi bi-info-circle"></i> Datos personales</div>
+      <div class="g3" style="margin-bottom:22px;">
+        <div class="fg">
+          <label>Fecha de nacimiento <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-calendar"></i>
+            <input type="date" name="fechanacimiento" id="fechanacimiento" required
+                   value="{{ paciente.fechanacimiento|date:'Y-m-d'|default:values.fechanacimiento|default:'' }}">
+          </div>
+          <div class="field-error" id="err-fechanacimiento">Fecha inválida. No puede ser futura ni mayor a 100 años atrás.</div>
+        </div>
+        <div class="fg">
+          <label>Sexo <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-gender-ambiguous"></i>
+            <select name="sexo" required>
+              <option value="">— Seleccionar —</option>
+              <option value="M" {% if paciente.sexo == 'M' or values.sexo == 'M' %}selected{% endif %}>Masculino</option>
+              <option value="F" {% if paciente.sexo == 'F' or values.sexo == 'F' %}selected{% endif %}>Femenino</option>
+              <option value="O" {% if paciente.sexo == 'O' or values.sexo == 'O' %}selected{% endif %}>Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Tipo de sangre</label>
+          <div class="iw">
+            <i class="ic bi bi-droplet-half"></i>
+            <select name="tiposangre">
+              <option value="">— No registrado —</option>
+              {% with ts=paciente.tiposangre|default:values.tiposangre %}
+              <option value="A+"  {% if ts == 'A+'  %}selected{% endif %}>A+</option>
+              <option value="A-"  {% if ts == 'A-'  %}selected{% endif %}>A-</option>
+              <option value="B+"  {% if ts == 'B+'  %}selected{% endif %}>B+</option>
+              <option value="B-"  {% if ts == 'B-'  %}selected{% endif %}>B-</option>
+              <option value="AB+" {% if ts == 'AB+' %}selected{% endif %}>AB+</option>
+              <option value="AB-" {% if ts == 'AB-' %}selected{% endif %}>AB-</option>
+              <option value="O+"  {% if ts == 'O+'  %}selected{% endif %}>O+</option>
+              <option value="O-"  {% if ts == 'O-'  %}selected{% endif %}>O-</option>
+              {% endwith %}
+            </select>
+          </div>
+          <span class="hint">Opcional</span>
+        </div>
+      </div>
+
+      <!-- CONTACTO -->
+      <div class="section-title azul"><i class="bi bi-telephone"></i> Contacto</div>
+      <div class="g3" style="margin-bottom:22px;">
+        <div class="fg">
+          <label>Teléfono</label>
+          <div class="iw">
+            <i class="ic bi bi-telephone"></i>
+            <input type="text" name="telefono" id="telefono" maxlength="12"
+                   placeholder="000-000-0000"
+                   value="{{ paciente.telefono|default:values.telefono|default:'' }}">
+          </div>
+          <div class="field-error" id="err-telefono">Formato requerido: 000-000-0000</div>
+        </div>
+        <div class="fg">
+          <label>Email</label>
+          <div class="iw">
+            <i class="ic bi bi-envelope"></i>
+            <input type="email" name="email" maxlength="150"
+                   placeholder="correo@ejemplo.com"
+                   value="{{ paciente.email|default:values.email|default:'' }}">
+          </div>
+          <div class="field-error" id="err-email">Ingresa un email válido.</div>
+        </div>
+        <div class="fg">
+          <label>Dirección</label>
+          <div class="iw">
+            <i class="ic bi bi-geo-alt"></i>
+            <input type="text" name="direccion" maxlength="255"
+                   placeholder="Calle, número, colonia"
+                   value="{{ paciente.direccion|default:values.direccion|default:'' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACTO EMERGENCIA -->
+      <div class="section-title rosa"><i class="bi bi-telephone-plus"></i> Contacto de emergencia</div>
+      <div class="g2" style="margin-bottom:22px;">
+        <div class="fg">
+          <label>Nombre del contacto</label>
+          <div class="iw">
+            <i class="ic bi bi-person-exclamation"></i>
+            <input type="text" name="contactoemergencianombre" id="contactoemergencianombre" maxlength="150"
+                   placeholder="Nombre completo del contacto"
+                   value="{{ paciente.contactoemergencianombre|default:values.contactoemergencianombre|default:'' }}">
+          </div>
+          <div class="field-error" id="err-contactonombre">Solo se permiten letras.</div>
+        </div>
+        <div class="fg">
+          <label>Teléfono de emergencia</label>
+          <div class="iw">
+            <i class="ic bi bi-telephone-fill"></i>
+            <input type="text" name="contactoemergenciatelefono" id="contactoemergenciatelefono" maxlength="12"
+                   placeholder="000-000-0000"
+                   value="{{ paciente.contactoemergenciatelefono|default:values.contactoemergenciatelefono|default:'' }}">
+          </div>
+          <div class="field-error" id="err-contactotelefono">Formato requerido: 000-000-0000</div>
+        </div>
+      </div>
+
+      <!-- ESTADO -->
+      <div class="section-title morado"><i class="bi bi-toggle-on"></i> Estado del registro</div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="fg">
+          <label>Paciente activo <span class="req">*</span></label>
+          <div class="iw">
+            <i class="ic bi bi-check-circle"></i>
+            <select name="activo" required>
+              <option value="1" {% if paciente.activo or not paciente %}selected{% endif %}>✓ Activo — puede usar el sistema</option>
+              <option value="0" {% if paciente and not paciente.activo %}selected{% endif %}>✗ Inactivo — sin acceso</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        {% if paciente %}
+        <button type="submit" class="btn-guardar-editar"><i class="bi bi-floppy"></i> Guardar cambios</button>
+        {% else %}
+        <button type="submit" class="btn-guardar-nuevo"><i class="bi bi-person-plus"></i> Registrar paciente</button>
+        {% endif %}
+        <a href="{% url 'admin_lista_pacientes' %}" class="btn-cancelar"><i class="bi bi-x"></i> Cancelar</a>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+<script>
+const soloLetras   = /^[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]+$/;
+const alfanumerico = /^[A-Za-z0-9]+$/;
+const telefonoFmt  = /^\d{3}-\d{3}-\d{4}$/;
+const emailFmt     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function showErr(id, inputEl) {
+  const err = document.getElementById(id);
+  if (err) err.classList.add('visible');
+  if (inputEl) inputEl.classList.add('error');
+}
+function clearErr(id, inputEl) {
+  const err = document.getElementById(id);
+  if (err) err.classList.remove('visible');
+  if (inputEl) inputEl.classList.remove('error');
+}
+
+// Auto-formato teléfonos
+function autoTel(inputEl) {
+  inputEl.addEventListener('input', function () {
+    let val = this.value.replace(/\D/g, '').slice(0, 10);
+    if (val.length >= 7) val = val.slice(0,3) + '-' + val.slice(3,6) + '-' + val.slice(6);
+    else if (val.length >= 4) val = val.slice(0,3) + '-' + val.slice(3);
+    this.value = val;
+  });
+}
+
+const telEl  = document.getElementById('telefono');
+const telEm  = document.getElementById('contactoemergenciatelefono');
+if (telEl) autoTel(telEl);
+if (telEm) autoTel(telEm);
+
+// Bloquear letras en teléfono
+[telEl, telEm].forEach(el => {
+  if (el) el.addEventListener('keypress', e => { if (!/[\d\-]/.test(e.key) && e.key !== 'Backspace') e.preventDefault(); });
+});
+
+// Bloquear números en nombre/apellido/contacto
+['nombre','apellido','contactoemergencianombre'].forEach(name => {
+  const el = document.querySelector(`[name="${name}"]`);
+  if (el) el.addEventListener('keypress', e => { if (/[0-9]/.test(e.key)) e.preventDefault(); });
+});
+
+document.getElementById('formPaciente').addEventListener('submit', function(e) {
+  let valid = true;
+
+  // Cédula — alfanumérico (solo si no es readonly)
+  const cedula = document.getElementById('cedula');
+  if (cedula && !cedula.readOnly) {
+    if (!alfanumerico.test(cedula.value.trim())) { showErr('err-cedula', cedula); valid = false; }
+    else clearErr('err-cedula', cedula);
+  }
+
+  // Nombre
+  const nombre = document.getElementById('nombre');
+  if (nombre && !soloLetras.test(nombre.value.trim())) { showErr('err-nombre', nombre); valid = false; }
+  else if (nombre) clearErr('err-nombre', nombre);
+
+  // Apellido
+  const apellido = document.getElementById('apellido');
+  if (apellido && !soloLetras.test(apellido.value.trim())) { showErr('err-apellido', apellido); valid = false; }
+  else if (apellido) clearErr('err-apellido', apellido);
+
+  // Fecha nacimiento
+  const fechaN = document.getElementById('fechanacimiento');
+  if (fechaN && fechaN.value) {
+    const f = new Date(fechaN.value);
+    const hoy = new Date();
+    const hace100 = new Date();
+    hace100.setFullYear(hoy.getFullYear() - 100);
+    if (f > hoy || f < hace100) { showErr('err-fechanacimiento', fechaN); valid = false; }
+    else clearErr('err-fechanacimiento', fechaN);
+  }
+
+  // Teléfono
+  if (telEl && telEl.value.trim() && !telefonoFmt.test(telEl.value.trim())) { showErr('err-telefono', telEl); valid = false; }
+  else if (telEl) clearErr('err-telefono', telEl);
+
+  // Email
+  const email = document.querySelector('[name="email"]');
+  if (email && email.value.trim() && !emailFmt.test(email.value.trim())) { showErr('err-email', email); valid = false; }
+  else if (email) clearErr('err-email', email);
+
+  // Contacto nombre
+  const cNombre = document.getElementById('contactoemergencianombre');
+  if (cNombre && cNombre.value.trim() && !soloLetras.test(cNombre.value.trim())) { showErr('err-contactonombre', cNombre); valid = false; }
+  else if (cNombre) clearErr('err-contactonombre', cNombre);
+
+  // Contacto teléfono
+  if (telEm && telEm.value.trim() && !telefonoFmt.test(telEm.value.trim())) { showErr('err-contactotelefono', telEm); valid = false; }
+  else if (telEm) clearErr('err-contactotelefono', telEm);
+
+  if (!valid) e.preventDefault();
+});
+</script>
+
+</body>
+</html>

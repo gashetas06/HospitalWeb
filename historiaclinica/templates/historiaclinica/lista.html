@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Historias Clínicas</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  body { background:#0f172a; color:#e2e8f0; font-family:'Segoe UI',sans-serif; display:flex; min-height:100vh; }
+  .sidebar { width:72px; background:#1e293b; display:flex; flex-direction:column; align-items:center; padding:20px 0; gap:8px; flex-shrink:0; position:fixed; height:100vh; z-index:100; }
+  .sidebar .logo { font-size:1.6rem; margin-bottom:16px; }
+  .sidebar a { width:48px; height:48px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; text-decoration:none; font-size:0.55rem; gap:3px; transition:background .2s,color .2s; }
+  .sidebar a i { font-size:1.2rem; }
+  .sidebar a:hover, .sidebar a.active { background:#334155; color:#38bdf8; }
+  .main { flex:1; margin-left:72px; padding:40px; }
+  .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+  .page-header h1 { font-size:1.6rem; font-weight:700; margin:0; }
+  .btn-nuevo { background:#0ea5e9; color:white; border:none; border-radius:12px; padding:10px 20px; font-weight:600; font-size:.9rem; text-decoration:none; display:flex; align-items:center; gap:6px; }
+  .btn-nuevo:hover { background:#0284c7; color:white; }
+  .search-bar { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 16px; color:#e2e8f0; font-size:.9rem; width:260px; outline:none; }
+  .search-bar:focus { border-color:#38bdf8; }
+  .table-card { background:#1e293b; border:1px solid #334155; border-radius:20px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { background:#0f172a; padding:14px 18px; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#64748b; }
+  tbody tr { border-top:1px solid #1e293b; transition:background .15s; }
+  tbody tr:hover { background:#243044; }
+  tbody td { padding:13px 18px; font-size:.88rem; vertical-align:middle; }
+  .btn-accion { width:32px; height:32px; border-radius:8px; border:none; display:inline-flex; align-items:center; justify-content:center; font-size:.9rem; cursor:pointer; transition:background .2s; text-decoration:none; }
+  .btn-view { background:#1e3a5f; color:#93c5fd; }
+  .btn-view:hover { background:#1d4ed8; color:white; }
+  .btn-edit { background:#1e3a4a; color:#60a5fa; }
+  .btn-edit:hover { background:#0284c7; color:white; }
+  .btn-del { background:#3b1e1e; color:#f87171; }
+  .btn-del:hover { background:#dc2626; color:white; }
+  .alert-msg { background:#1e3a4a; border:1px solid #38bdf8; border-radius:10px; padding:10px 16px; margin-bottom:20px; font-size:.85rem; color:#7dd3fc; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="logo"></div>
+  <a href="/"><i class="bi bi-speedometer2"></i>Inicio</a>
+  <a href="/pacientes/"><i class="bi bi-person-heart"></i>Paciente</a>
+  <a href="/medicos/"><i class="bi bi-person-badge"></i>Médico</a>
+  <a href="/empleados/"><i class="bi bi-people"></i>Empleado</a>
+  <a href="/citas/"><i class="bi bi-calendar-check"></i>Citas</a>
+  <a href="/historiaclinica/" class="active"><i class="bi bi-clipboard2-pulse"></i>Clínico</a>
+  <a href="/inventario/"><i class="bi bi-box-seam"></i>Inventario</a>
+  <a href="/facturas/"><i class="bi bi-receipt"></i>Factura</a>
+  <a href="/internacion/"><i class="bi bi-door-open"></i>Internación</a>
+  <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left"></i>Salir</a>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1>Historias Clínicas</h1>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <input class="search-bar" type="text" id="searchInput" placeholder="Buscar paciente...">
+    </div>
+  </div>
+
+  {% if messages %}{% for msg in messages %}<div class="alert-msg">{{ msg }}</div>{% endfor %}{% endif %}
+
+  <div class="table-card">
+    <table id="tablaHC">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Paciente</th>
+          <th>Alergias</th>
+          <th>Creación</th>
+          <th>Última Actualización</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in historias %}
+        <tr>
+          <td><strong>#{{ h.idhistoria }}</strong></td>
+          <td>{{ h.idpaciente }}</td>
+          <td>{{ h.alergias|default:"Ninguna"|truncatechars:40 }}</td>
+          <td>{{ h.fechacreacion|date:"d/m/Y" }}</td>
+          <td>{{ h.ultimaactualizacion|date:"d/m/Y"|default:"-" }}</td>
+          <td style="display:flex;gap:6px;">
+            <a href="{% url 'ver_historia' h.idhistoria %}" class="btn-accion btn-view" title="Ver"><i class="bi bi-eye"></i></a>
+            <a href="{% url 'editar_historia' h.idhistoria %}" class="btn-accion btn-edit" title="Editar"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{% url 'eliminar_historia' h.idhistoria %}" onsubmit="return confirm('¿Eliminar historia clínica?')">
+              {% csrf_token %}<button type="submit" class="btn-accion btn-del"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:#475569;">Sin historias registradas</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#tablaHC tbody tr').forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
+});
+</script>
+</body>
+</html>

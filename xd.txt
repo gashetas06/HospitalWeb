@@ -1,494 +1,518 @@
--- ============================================================
---  SISTEMA DE GESTIÓN DE CITAS HOSPITALARIO
---  SQL Server | Nivel universitario avanzado
---  Autor: Generado con asistencia de Claude
--- ============================================================
-
--- ============================================================
---  BASE DE DATOS
--- ============================================================
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'HospitalDB')
     DROP DATABASE HospitalDB;
 GO
+
 CREATE DATABASE HospitalDB;
 GO
-use master;
+
 USE HospitalDB;
 GO
 
--- ============================================================
---  CATÁLOGOS Y TABLAS MAESTRAS
--- ============================================================
-
--- Especialidades médicas (catálogo normalizado)
 CREATE TABLE Especialidad (
-    idEspecialidad   INT           PRIMARY KEY IDENTITY(1,1),
-    nombre           NVARCHAR(100) NOT NULL UNIQUE,
-    descripcion      NVARCHAR(255) NULL
+    idEspecialidad INT PRIMARY KEY IDENTITY(1,1),
+    nombre NVARCHAR(100) NOT NULL UNIQUE,
+    descripcion NVARCHAR(255) NULL
 );
 GO
 
--- Departamentos hospitalarios
 CREATE TABLE Departamento (
-    idDepartamento   INT           PRIMARY KEY IDENTITY(1,1),
-    nombre           NVARCHAR(100) NOT NULL UNIQUE,
-    piso             TINYINT       NOT NULL,
-    telefono         NVARCHAR(20)  NULL
+    idDepartamento INT PRIMARY KEY IDENTITY(1,1),
+    nombre NVARCHAR(100) NOT NULL UNIQUE,
+    piso TINYINT NOT NULL,
+    telefono NVARCHAR(20) NULL
 );
 GO
 
--- ============================================================
---  PERSONAL MÉDICO Y ADMINISTRATIVO
--- ============================================================
-
--- Médicos
 CREATE TABLE Medico (
-    idMedico         INT           PRIMARY KEY IDENTITY(1,1),
-    cedula           NVARCHAR(20)  NOT NULL UNIQUE,
-    nombre           NVARCHAR(100) NOT NULL,
-    apellido         NVARCHAR(100) NOT NULL,
-    idEspecialidad   INT           NOT NULL,
-    idDepartamento   INT           NOT NULL,
-    telefono         NVARCHAR(20)  NULL,
-    email            NVARCHAR(150) NULL,
-    fechaIngreso     DATE          NOT NULL DEFAULT GETDATE(),
-    activo           BIT           NOT NULL DEFAULT 1,
-    CONSTRAINT FK_Medico_Especialidad  FOREIGN KEY (idEspecialidad)  REFERENCES Especialidad(idEspecialidad),
-    CONSTRAINT FK_Medico_Departamento  FOREIGN KEY (idDepartamento)  REFERENCES Departamento(idDepartamento)
+    idMedico INT PRIMARY KEY IDENTITY(1,1),
+    cedula NVARCHAR(20) NOT NULL UNIQUE,
+    nombre NVARCHAR(100) NOT NULL,
+    apellido NVARCHAR(100) NOT NULL,
+    idEspecialidad INT NOT NULL,
+    idDepartamento INT NOT NULL,
+    telefono NVARCHAR(20) NULL,
+    email NVARCHAR(150) NULL,
+    fechaIngreso DATE NOT NULL DEFAULT GETDATE(),
+    activo BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_Medico_Especialidad
+        FOREIGN KEY (idEspecialidad)
+        REFERENCES Especialidad(idEspecialidad),
+    CONSTRAINT FK_Medico_Departamento
+        FOREIGN KEY (idDepartamento)
+        REFERENCES Departamento(idDepartamento)
 );
 GO
 
--- Horarios de atención por médico (qué días y rangos de hora trabaja)
 CREATE TABLE HorarioMedico (
-    idHorario        INT           PRIMARY KEY IDENTITY(1,1),
-    idMedico         INT           NOT NULL,
-    diaSemana        TINYINT       NOT NULL CHECK (diaSemana BETWEEN 1 AND 7), -- 1=Lun … 7=Dom
-    horaInicio       TIME          NOT NULL,
-    horaFin          TIME          NOT NULL,
-    duracionCita     TINYINT       NOT NULL DEFAULT 30,                         -- minutos por cita
-    CONSTRAINT FK_Horario_Medico      FOREIGN KEY (idMedico)       REFERENCES Medico(idMedico),
-    CONSTRAINT CHK_Horario_Horas      CHECK (horaFin > horaInicio)
+    idHorario INT PRIMARY KEY IDENTITY(1,1),
+    idMedico INT NOT NULL,
+    diaSemana TINYINT NOT NULL CHECK (diaSemana BETWEEN 1 AND 7),
+    horaInicio TIME NOT NULL,
+    horaFin TIME NOT NULL,
+    duracionCita TINYINT NOT NULL DEFAULT 30,
+    CONSTRAINT FK_Horario_Medico
+        FOREIGN KEY (idMedico)
+        REFERENCES Medico(idMedico),
+    CONSTRAINT CHK_Horario_Horas
+        CHECK (horaFin > horaInicio)
 );
 GO
 
--- Empleados administrativos / enfermería
 CREATE TABLE Empleado (
-    idEmpleado       INT           PRIMARY KEY IDENTITY(1,1),
-    cedula           NVARCHAR(20)  NOT NULL UNIQUE,
-    nombre           NVARCHAR(100) NOT NULL,
-    apellido         NVARCHAR(100) NOT NULL,
-    cargo            NVARCHAR(100) NOT NULL,
-    idDepartamento   INT           NOT NULL,
-    salario          DECIMAL(12,2) NULL,
-    fechaIngreso     DATE          NOT NULL DEFAULT GETDATE(),
-    activo           BIT           NOT NULL DEFAULT 1,
-    CONSTRAINT FK_Empleado_Departamento FOREIGN KEY (idDepartamento) REFERENCES Departamento(idDepartamento)
+    idEmpleado INT PRIMARY KEY IDENTITY(1,1),
+    cedula NVARCHAR(20) NOT NULL UNIQUE,
+    nombre NVARCHAR(100) NOT NULL,
+    apellido NVARCHAR(100) NOT NULL,
+    cargo NVARCHAR(100) NOT NULL,
+    idDepartamento INT NOT NULL,
+    salario DECIMAL(12,2) NULL,
+    fechaIngreso DATE NOT NULL DEFAULT GETDATE(),
+    activo BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_Empleado_Departamento
+        FOREIGN KEY (idDepartamento)
+        REFERENCES Departamento(idDepartamento)
 );
 GO
-
--- ============================================================
---  PACIENTES
--- ============================================================
 
 CREATE TABLE Paciente (
-    idPaciente       INT           PRIMARY KEY IDENTITY(1,1),
-    cedula           NVARCHAR(20)  NOT NULL UNIQUE,
-    nombre           NVARCHAR(100) NOT NULL,
-    apellido         NVARCHAR(100) NOT NULL,
-    fechaNacimiento  DATE          NOT NULL,
-    sexo             CHAR(1)       NOT NULL CHECK (sexo IN ('M','F','O')),
-    tipoSangre       NVARCHAR(5)   NULL,
-    telefono         NVARCHAR(20)  NULL,
-    email            NVARCHAR(150) NULL,
-    direccion        NVARCHAR(255) NULL,
-    -- Contacto de emergencia
-    contactoEmergenciaNombre   NVARCHAR(150) NULL,
-    contactoEmergenciaTelefono NVARCHAR(20)  NULL,
-    fechaRegistro    DATETIME      NOT NULL DEFAULT GETDATE(),
-    activo           BIT           NOT NULL DEFAULT 1
+    idPaciente INT PRIMARY KEY IDENTITY(1,1),
+    cedula NVARCHAR(20) NOT NULL UNIQUE,
+    nombre NVARCHAR(100) NOT NULL,
+    apellido NVARCHAR(100) NOT NULL,
+    fechaNacimiento DATE NOT NULL,
+    sexo CHAR(1) NOT NULL CHECK (sexo IN ('M','F','O')),
+    tipoSangre NVARCHAR(5) NULL,
+    telefono NVARCHAR(20) NULL,
+    email NVARCHAR(150) NULL,
+    direccion NVARCHAR(255) NULL,
+    contactoEmergenciaNombre NVARCHAR(150) NULL,
+    contactoEmergenciaTelefono NVARCHAR(20) NULL,
+    fechaRegistro DATETIME NOT NULL DEFAULT GETDATE(),
+    activo BIT NOT NULL DEFAULT 1
 );
 GO
 
--- ============================================================
---  HISTORIA CLÍNICA
--- ============================================================
-
--- Cada paciente tiene exactamente una historia clínica (1:1)
 CREATE TABLE HistoriaClinica (
-    idHistoria       INT           PRIMARY KEY IDENTITY(1,1),
-    idPaciente       INT           NOT NULL UNIQUE,   -- 1:1 garantizado
-    alergias         NVARCHAR(500) NULL,
-    antecedentesPersonales  NVARCHAR(MAX) NULL,
-    antecedentesFamiliares  NVARCHAR(MAX) NULL,
-    observaciones    NVARCHAR(MAX) NULL,
-    fechaCreacion    DATETIME      NOT NULL DEFAULT GETDATE(),
-    ultimaActualizacion DATETIME  NULL,
-    CONSTRAINT FK_Historia_Paciente FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente)
+    idHistoria INT PRIMARY KEY IDENTITY(1,1),
+    idPaciente INT NOT NULL UNIQUE,
+    alergias NVARCHAR(500) NULL,
+    antecedentesPersonales NVARCHAR(MAX) NULL,
+    antecedentesFamiliares NVARCHAR(MAX) NULL,
+    observaciones NVARCHAR(MAX) NULL,
+    fechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+    ultimaActualizacion DATETIME NULL,
+    CONSTRAINT FK_Historia_Paciente
+        FOREIGN KEY (idPaciente)
+        REFERENCES Paciente(idPaciente)
 );
 GO
 
--- Evoluciones / notas clínicas (una por consulta)
 CREATE TABLE EvolucionClinica (
-    idEvolucion      INT           PRIMARY KEY IDENTITY(1,1),
-    idHistoria       INT           NOT NULL,
-    idMedico         INT           NOT NULL,
-    fecha            DATETIME      NOT NULL DEFAULT GETDATE(),
-    motivoConsulta   NVARCHAR(500) NOT NULL,
+    idEvolucion INT PRIMARY KEY IDENTITY(1,1),
+    idHistoria INT NOT NULL,
+    idMedico INT NOT NULL,
+    fecha DATETIME NOT NULL DEFAULT GETDATE(),
+    motivoConsulta NVARCHAR(500) NOT NULL,
     exploracionFisica NVARCHAR(MAX) NULL,
-    diagnostico      NVARCHAR(MAX) NULL,
-    tratamiento      NVARCHAR(MAX) NULL,
-    receta           NVARCHAR(MAX) NULL,
-    proximaRevision  DATE          NULL,
-    CONSTRAINT FK_Evolucion_Historia FOREIGN KEY (idHistoria) REFERENCES HistoriaClinica(idHistoria),
-    CONSTRAINT FK_Evolucion_Medico   FOREIGN KEY (idMedico)   REFERENCES Medico(idMedico)
+    diagnostico NVARCHAR(MAX) NULL,
+    tratamiento NVARCHAR(MAX) NULL,
+    receta NVARCHAR(MAX) NULL,
+    proximaRevision DATE NULL,
+    CONSTRAINT FK_Evolucion_Historia
+        FOREIGN KEY (idHistoria)
+        REFERENCES HistoriaClinica(idHistoria),
+    CONSTRAINT FK_Evolucion_Medico
+        FOREIGN KEY (idMedico)
+        REFERENCES Medico(idMedico)
 );
 GO
-
--- ============================================================
---  CITAS
--- ============================================================
 
 CREATE TABLE Cita (
-    idCita           INT           PRIMARY KEY IDENTITY(1,1),
-    idPaciente       INT           NOT NULL,
-    idMedico         INT           NOT NULL,
-    idEmpleadoRegistra INT         NULL,   -- quién agendó la cita
-    fecha            DATE          NOT NULL,
-    hora             TIME          NOT NULL,
-    duracionMinutos  TINYINT       NOT NULL DEFAULT 30,
-    tipoCita         NVARCHAR(50)  NOT NULL DEFAULT 'Consulta'
-                         CHECK (tipoCita IN ('Consulta','Seguimiento','Urgencia','Procedimiento','Teleconsulta')),
-    estado           NVARCHAR(30)  NOT NULL DEFAULT 'Programada'
-                         CHECK (estado IN ('Programada','Confirmada','En curso','Completada','Cancelada','No asistió')),
+    idCita INT PRIMARY KEY IDENTITY(1,1),
+    idPaciente INT NOT NULL,
+    idMedico INT NOT NULL,
+    idEmpleadoRegistra INT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    duracionMinutos TINYINT NOT NULL DEFAULT 30,
+    tipoCita NVARCHAR(50) NOT NULL DEFAULT 'Consulta'
+        CHECK (tipoCita IN ('Consulta','Seguimiento','Urgencia','Procedimiento','Teleconsulta')),
+    estado NVARCHAR(30) NOT NULL DEFAULT 'Programada'
+        CHECK (estado IN ('Programada','Confirmada','En curso','Completada','Cancelada','No asistió')),
     motivoCancelacion NVARCHAR(255) NULL,
-    notas            NVARCHAR(500) NULL,
-    fechaCreacion    DATETIME      NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Cita_Paciente   FOREIGN KEY (idPaciente)         REFERENCES Paciente(idPaciente),
-    CONSTRAINT FK_Cita_Medico     FOREIGN KEY (idMedico)           REFERENCES Medico(idMedico),
-    CONSTRAINT FK_Cita_Empleado   FOREIGN KEY (idEmpleadoRegistra) REFERENCES Empleado(idEmpleado)
+    notas NVARCHAR(500) NULL,
+    fechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Cita_Paciente
+        FOREIGN KEY (idPaciente)
+        REFERENCES Paciente(idPaciente),
+    CONSTRAINT FK_Cita_Medico
+        FOREIGN KEY (idMedico)
+        REFERENCES Medico(idMedico),
+    CONSTRAINT FK_Cita_Empleado
+        FOREIGN KEY (idEmpleadoRegistra)
+        REFERENCES Empleado(idEmpleado)
 );
 GO
 
--- Índice compuesto para evitar doble reserva (mismo médico, misma fecha/hora)
 CREATE UNIQUE INDEX UQ_Cita_Medico_FechaHora
-    ON Cita (idMedico, fecha, hora)
-    WHERE estado NOT IN ('Cancelada', 'No asistió');
+ON Cita (idMedico, fecha, hora)
+WHERE estado NOT IN ('Cancelada', 'No asistió');
 GO
 
--- ============================================================
---  HOSPITALIZACIÓN Y CAMAS
--- ============================================================
-
 CREATE TABLE TipoHabitacion (
-    idTipo           INT           PRIMARY KEY IDENTITY(1,1),
-    descripcion      NVARCHAR(100) NOT NULL UNIQUE,   -- 'UCI', 'General', 'Privada', etc.
-    costoDiario      DECIMAL(10,2) NOT NULL DEFAULT 0
+    idTipo INT PRIMARY KEY IDENTITY(1,1),
+    descripcion NVARCHAR(100) NOT NULL UNIQUE,
+    costoDiario DECIMAL(10,2) NOT NULL DEFAULT 0
 );
 GO
 
 CREATE TABLE Cama (
-    idCama           INT           PRIMARY KEY IDENTITY(1,1),
-    numero           NVARCHAR(10)  NOT NULL UNIQUE,
-    idDepartamento   INT           NOT NULL,
-    idTipo           INT           NOT NULL,
-    estado           NVARCHAR(20)  NOT NULL DEFAULT 'Libre'
-                         CHECK (estado IN ('Libre','Ocupada','Mantenimiento','Reservada')),
-    CONSTRAINT FK_Cama_Departamento FOREIGN KEY (idDepartamento) REFERENCES Departamento(idDepartamento),
-    CONSTRAINT FK_Cama_Tipo         FOREIGN KEY (idTipo)         REFERENCES TipoHabitacion(idTipo)
+    idCama INT PRIMARY KEY IDENTITY(1,1),
+    numero NVARCHAR(10) NOT NULL UNIQUE,
+    idDepartamento INT NOT NULL,
+    idTipo INT NOT NULL,
+    estado NVARCHAR(20) NOT NULL DEFAULT 'Libre'
+        CHECK (estado IN ('Libre','Ocupada','Mantenimiento','Reservada')),
+    CONSTRAINT FK_Cama_Departamento
+        FOREIGN KEY (idDepartamento)
+        REFERENCES Departamento(idDepartamento),
+    CONSTRAINT FK_Cama_Tipo
+        FOREIGN KEY (idTipo)
+        REFERENCES TipoHabitacion(idTipo)
 );
 GO
 
--- Internaciones (quién ocupa qué cama, cuándo ingresó y egresó)
 CREATE TABLE Internacion (
-    idInternacion    INT           PRIMARY KEY IDENTITY(1,1),
-    idPaciente       INT           NOT NULL,
-    idCama           INT           NOT NULL,
-    idMedicoTratante INT           NOT NULL,
-    fechaIngreso     DATETIME      NOT NULL DEFAULT GETDATE(),
-    fechaEgreso      DATETIME      NULL,
-    motivoIngreso    NVARCHAR(500) NOT NULL,
+    idInternacion INT PRIMARY KEY IDENTITY(1,1),
+    idPaciente INT NOT NULL,
+    idCama INT NOT NULL,
+    idMedicoTratante INT NOT NULL,
+    fechaIngreso DATETIME NOT NULL DEFAULT GETDATE(),
+    fechaEgreso DATETIME NULL,
+    motivoIngreso NVARCHAR(500) NOT NULL,
     diagnosticoEgreso NVARCHAR(500) NULL,
-    condicionEgreso  NVARCHAR(50)  NULL
-                         CHECK (condicionEgreso IN ('Alta voluntaria','Alta médica','Traslado','Fallecido',NULL)),
-    CONSTRAINT FK_Intern_Paciente FOREIGN KEY (idPaciente)       REFERENCES Paciente(idPaciente),
-    CONSTRAINT FK_Intern_Cama     FOREIGN KEY (idCama)           REFERENCES Cama(idCama),
-    CONSTRAINT FK_Intern_Medico   FOREIGN KEY (idMedicoTratante) REFERENCES Medico(idMedico)
+    condicionEgreso NVARCHAR(50) NULL
+        CHECK (condicionEgreso IN ('Alta voluntaria','Alta médica','Traslado','Fallecido',NULL)),
+    CONSTRAINT FK_Intern_Paciente
+        FOREIGN KEY (idPaciente)
+        REFERENCES Paciente(idPaciente),
+    CONSTRAINT FK_Intern_Cama
+        FOREIGN KEY (idCama)
+        REFERENCES Cama(idCama),
+    CONSTRAINT FK_Intern_Medico
+        FOREIGN KEY (idMedicoTratante)
+        REFERENCES Medico(idMedico)
 );
 GO
-
--- ============================================================
---  INVENTARIO
--- ============================================================
 
 CREATE TABLE CategoriaInventario (
-    idCategoria      INT           PRIMARY KEY IDENTITY(1,1),
-    nombre           NVARCHAR(100) NOT NULL UNIQUE   -- 'Medicamento', 'Material quirúrgico', etc.
+    idCategoria INT PRIMARY KEY IDENTITY(1,1),
+    nombre NVARCHAR(100) NOT NULL UNIQUE
 );
 GO
 
 CREATE TABLE Inventario (
-    idInventario     INT           PRIMARY KEY IDENTITY(1,1),
-    idCategoria      INT           NOT NULL,
-    nombreProducto   NVARCHAR(150) NOT NULL,
-    unidadMedida     NVARCHAR(30)  NOT NULL,    -- 'unidad', 'caja', 'litro', etc.
-    cantidadDisponible INT         NOT NULL DEFAULT 0 CHECK (cantidadDisponible >= 0),
-    nivelCritico     INT           NOT NULL DEFAULT 0 CHECK (nivelCritico >= 0),
-    precioUnitario   DECIMAL(10,2) NULL,
-    proveedor        NVARCHAR(150) NULL,
-    fechaUltimaEntrada DATETIME    NULL,
-    CONSTRAINT FK_Inventario_Categoria FOREIGN KEY (idCategoria) REFERENCES CategoriaInventario(idCategoria)
+    idInventario INT PRIMARY KEY IDENTITY(1,1),
+    idCategoria INT NOT NULL,
+    nombreProducto NVARCHAR(150) NOT NULL,
+    unidadMedida NVARCHAR(30) NOT NULL,
+    cantidadDisponible INT NOT NULL DEFAULT 0 CHECK (cantidadDisponible >= 0),
+    nivelCritico INT NOT NULL DEFAULT 0 CHECK (nivelCritico >= 0),
+    precioUnitario DECIMAL(10,2) NULL,
+    proveedor NVARCHAR(150) NULL,
+    fechaUltimaEntrada DATETIME NULL,
+    CONSTRAINT FK_Inventario_Categoria
+        FOREIGN KEY (idCategoria)
+        REFERENCES CategoriaInventario(idCategoria)
 );
 GO
 
--- Movimientos de inventario (entradas y salidas trazables)
 CREATE TABLE MovimientoInventario (
-    idMovimiento     INT           PRIMARY KEY IDENTITY(1,1),
-    idInventario     INT           NOT NULL,
-    idEmpleado       INT           NULL,         -- quién registró el movimiento
-    tipoMovimiento   NVARCHAR(20)  NOT NULL CHECK (tipoMovimiento IN ('Entrada','Salida','Ajuste')),
-    cantidad         INT           NOT NULL CHECK (cantidad > 0),
-    motivo           NVARCHAR(255) NULL,
-    fecha            DATETIME      NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Movimiento_Inventario FOREIGN KEY (idInventario) REFERENCES Inventario(idInventario),
-    CONSTRAINT FK_Movimiento_Empleado   FOREIGN KEY (idEmpleado)   REFERENCES Empleado(idEmpleado)
+    idMovimiento INT PRIMARY KEY IDENTITY(1,1),
+    idInventario INT NOT NULL,
+    idEmpleado INT NULL,
+    tipoMovimiento NVARCHAR(20) NOT NULL
+        CHECK (tipoMovimiento IN ('Entrada','Salida','Ajuste')),
+    cantidad INT NOT NULL CHECK (cantidad > 0),
+    motivo NVARCHAR(255) NULL,
+    fecha DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Movimiento_Inventario
+        FOREIGN KEY (idInventario)
+        REFERENCES Inventario(idInventario),
+    CONSTRAINT FK_Movimiento_Empleado
+        FOREIGN KEY (idEmpleado)
+        REFERENCES Empleado(idEmpleado)
 );
 GO
-
--- ============================================================
---  FACTURACIÓN
--- ============================================================
 
 CREATE TABLE Factura (
-    idFactura        INT           PRIMARY KEY IDENTITY(1,1),
-    idPaciente       INT           NOT NULL,
-    idCita           INT           NULL,
-    idInternacion    INT           NULL,
-    fechaEmision     DATETIME      NOT NULL DEFAULT GETDATE(),
-    subtotal         DECIMAL(12,2) NOT NULL DEFAULT 0,
-    impuesto         DECIMAL(12,2) NOT NULL DEFAULT 0,
-    descuento        DECIMAL(12,2) NOT NULL DEFAULT 0,
-    total            AS (subtotal + impuesto - descuento) PERSISTED,
-    estado           NVARCHAR(20)  NOT NULL DEFAULT 'Pendiente'
-                         CHECK (estado IN ('Pendiente','Pagada','Anulada')),
-    metodoPago       NVARCHAR(50)  NULL
-                         CHECK (metodoPago IN ('Efectivo','Tarjeta','Transferencia','Seguro',NULL)),
-    observaciones    NVARCHAR(500) NULL,
-    CONSTRAINT FK_Factura_Paciente    FOREIGN KEY (idPaciente)   REFERENCES Paciente(idPaciente),
-    CONSTRAINT FK_Factura_Cita        FOREIGN KEY (idCita)       REFERENCES Cita(idCita),
-    CONSTRAINT FK_Factura_Internacion FOREIGN KEY (idInternacion) REFERENCES Internacion(idInternacion)
+    idFactura INT PRIMARY KEY IDENTITY(1,1),
+    idPaciente INT NOT NULL,
+    idCita INT NULL,
+    idInternacion INT NULL,
+    fechaEmision DATETIME NOT NULL DEFAULT GETDATE(),
+    subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+    impuesto DECIMAL(12,2) NOT NULL DEFAULT 0,
+    descuento DECIMAL(12,2) NOT NULL DEFAULT 0,
+    total AS (subtotal + impuesto - descuento) PERSISTED,
+    estado NVARCHAR(20) NOT NULL DEFAULT 'Pendiente'
+        CHECK (estado IN ('Pendiente','Pagada','Anulada')),
+    metodoPago NVARCHAR(50) NULL
+        CHECK (metodoPago IN ('Efectivo','Tarjeta','Transferencia','Seguro',NULL)),
+    observaciones NVARCHAR(500) NULL,
+    CONSTRAINT FK_Factura_Paciente
+        FOREIGN KEY (idPaciente)
+        REFERENCES Paciente(idPaciente),
+    CONSTRAINT FK_Factura_Cita
+        FOREIGN KEY (idCita)
+        REFERENCES Cita(idCita),
+    CONSTRAINT FK_Factura_Internacion
+        FOREIGN KEY (idInternacion)
+        REFERENCES Internacion(idInternacion)
 );
 GO
-
--- ============================================================
---  AUDITORÍA GENERAL
--- ============================================================
 
 CREATE TABLE LogAuditoria (
-    idLog            BIGINT        PRIMARY KEY IDENTITY(1,1),
-    tabla            NVARCHAR(100) NOT NULL,
-    operacion        NVARCHAR(10)  NOT NULL,  -- INSERT / UPDATE / DELETE
-    idRegistro       INT           NOT NULL,
-    descripcion      NVARCHAR(MAX) NULL,
-    usuario          NVARCHAR(100) NOT NULL DEFAULT SYSTEM_USER,
-    fecha            DATETIME      NOT NULL DEFAULT GETDATE()
+    idLog BIGINT PRIMARY KEY IDENTITY(1,1),
+    tabla NVARCHAR(100) NOT NULL,
+    operacion NVARCHAR(10) NOT NULL,
+    idRegistro INT NOT NULL,
+    descripcion NVARCHAR(MAX) NULL,
+    usuario NVARCHAR(100) NOT NULL DEFAULT SYSTEM_USER,
+    fecha DATETIME NOT NULL DEFAULT GETDATE()
 );
 GO
 
--- ============================================================
---  STORED PROCEDURES
--- ============================================================
-
--- SP: Agendar una cita validando disponibilidad
 CREATE OR ALTER PROCEDURE sp_AgendarCita
-    @idPaciente       INT,
-    @idMedico         INT,
-    @fecha            DATE,
-    @hora             TIME,
-    @tipoCita         NVARCHAR(50) = 'Consulta',
-    @notas            NVARCHAR(500) = NULL,
-    @idEmpleado       INT = NULL
+    @idPaciente INT,
+    @idMedico INT,
+    @fecha DATE,
+    @hora TIME,
+    @tipoCita NVARCHAR(50) = 'Consulta',
+    @notas NVARCHAR(500) = NULL,
+    @idEmpleado INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. Verificar que el médico esté activo
-    IF NOT EXISTS (SELECT 1 FROM Medico WHERE idMedico = @idMedico AND activo = 1)
-    BEGIN
-        RAISERROR('El médico no existe o no está activo.', 16, 1);
-        RETURN;
-    END
-
-    -- 2. Verificar que el paciente esté activo
-    IF NOT EXISTS (SELECT 1 FROM Paciente WHERE idPaciente = @idPaciente AND activo = 1)
-    BEGIN
-        RAISERROR('El paciente no existe o no está activo.', 16, 1);
-        RETURN;
-    END
-
-    -- 3. Verificar que no exista otra cita activa para ese médico en esa fecha/hora
-    IF EXISTS (
-        SELECT 1 FROM Cita
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Medico
         WHERE idMedico = @idMedico
-          AND fecha = @fecha
-          AND hora  = @hora
-          AND estado NOT IN ('Cancelada', 'No asistió')
+        AND activo = 1
     )
     BEGIN
-        RAISERROR('El médico ya tiene una cita programada en esa fecha y hora.', 16, 1);
+        RAISERROR('El médico no existe o no está activo.',16,1);
         RETURN;
     END
-
-    -- 4. Verificar que el médico atiende ese día de la semana
-    DECLARE @diaSemana TINYINT = DATEPART(WEEKDAY, @fecha);
-    -- Ajuste: DATEPART devuelve 1=Dom en SQL Server; convertimos a 1=Lun
-    SET @diaSemana = CASE @diaSemana WHEN 1 THEN 7 ELSE @diaSemana - 1 END;
 
     IF NOT EXISTS (
-        SELECT 1 FROM HorarioMedico
-        WHERE idMedico   = @idMedico
-          AND diaSemana  = @diaSemana
-          AND @hora BETWEEN horaInicio AND horaFin
+        SELECT 1
+        FROM Paciente
+        WHERE idPaciente = @idPaciente
+        AND activo = 1
     )
     BEGIN
-        RAISERROR('El médico no tiene horario disponible en ese día u hora.', 16, 1);
+        RAISERROR('El paciente no existe o no está activo.',16,1);
         RETURN;
     END
 
-    -- 5. Insertar la cita
-    INSERT INTO Cita (idPaciente, idMedico, idEmpleadoRegistra, fecha, hora, tipoCita, notas)
-    VALUES (@idPaciente, @idMedico, @idEmpleado, @fecha, @hora, @tipoCita, @notas);
+    IF EXISTS (
+        SELECT 1
+        FROM Cita
+        WHERE idMedico = @idMedico
+        AND fecha = @fecha
+        AND hora = @hora
+        AND estado NOT IN ('Cancelada','No asistió')
+    )
+    BEGIN
+        RAISERROR('El médico ya tiene una cita programada en esa fecha y hora.',16,1);
+        RETURN;
+    END
+
+    DECLARE @diaSemana TINYINT = DATEPART(WEEKDAY,@fecha);
+
+    SET @diaSemana =
+        CASE @diaSemana
+            WHEN 1 THEN 7
+            ELSE @diaSemana - 1
+        END;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM HorarioMedico
+        WHERE idMedico = @idMedico
+        AND diaSemana = @diaSemana
+        AND @hora BETWEEN horaInicio AND horaFin
+    )
+    BEGIN
+        RAISERROR('El médico no tiene horario disponible en ese día u hora.',16,1);
+        RETURN;
+    END
+
+    INSERT INTO Cita (
+        idPaciente,
+        idMedico,
+        idEmpleadoRegistra,
+        fecha,
+        hora,
+        tipoCita,
+        notas
+    )
+    VALUES (
+        @idPaciente,
+        @idMedico,
+        @idEmpleado,
+        @fecha,
+        @hora,
+        @tipoCita,
+        @notas
+    );
 
     SELECT SCOPE_IDENTITY() AS idCitaGenerada;
 END;
 GO
 
--- SP: Cancelar una cita
 CREATE OR ALTER PROCEDURE sp_CancelarCita
-    @idCita           INT,
+    @idCita INT,
     @motivoCancelacion NVARCHAR(255) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Cita WHERE idCita = @idCita)
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Cita
+        WHERE idCita = @idCita
+    )
     BEGIN
-        RAISERROR('La cita no existe.', 16, 1);
+        RAISERROR('La cita no existe.',16,1);
         RETURN;
     END
 
-    IF EXISTS (SELECT 1 FROM Cita WHERE idCita = @idCita AND estado IN ('Completada','Cancelada'))
+    IF EXISTS (
+        SELECT 1
+        FROM Cita
+        WHERE idCita = @idCita
+        AND estado IN ('Completada','Cancelada')
+    )
     BEGIN
-        RAISERROR('La cita ya fue completada o cancelada.', 16, 1);
+        RAISERROR('La cita ya fue completada o cancelada.',16,1);
         RETURN;
     END
 
     UPDATE Cita
-    SET estado = 'Cancelada', motivoCancelacion = @motivoCancelacion
+    SET estado = 'Cancelada',
+        motivoCancelacion = @motivoCancelacion
     WHERE idCita = @idCita;
-
-    PRINT 'Cita ' + CAST(@idCita AS NVARCHAR) + ' cancelada correctamente.';
 END;
 GO
 
--- SP: Dar de alta a un paciente internado y liberar su cama
 CREATE OR ALTER PROCEDURE sp_AltaPaciente
-    @idInternacion    INT,
+    @idInternacion INT,
     @diagnosticoEgreso NVARCHAR(500) = NULL,
-    @condicionEgreso  NVARCHAR(50)   = 'Alta médica'
+    @condicionEgreso NVARCHAR(50) = 'Alta médica'
 AS
 BEGIN
     SET NOCOUNT ON;
+
     BEGIN TRANSACTION;
 
     DECLARE @idCama INT;
-    SELECT @idCama = idCama FROM Internacion WHERE idInternacion = @idInternacion;
+
+    SELECT @idCama = idCama
+    FROM Internacion
+    WHERE idInternacion = @idInternacion;
 
     IF @idCama IS NULL
     BEGIN
         ROLLBACK;
-        RAISERROR('Internación no encontrada.', 16, 1);
+        RAISERROR('Internación no encontrada.',16,1);
         RETURN;
     END
 
-    -- Registrar egreso
     UPDATE Internacion
-    SET fechaEgreso      = GETDATE(),
+    SET fechaEgreso = GETDATE(),
         diagnosticoEgreso = @diagnosticoEgreso,
-        condicionEgreso   = @condicionEgreso
+        condicionEgreso = @condicionEgreso
     WHERE idInternacion = @idInternacion;
 
-    -- Liberar cama
-    UPDATE Cama SET estado = 'Libre' WHERE idCama = @idCama;
+    UPDATE Cama
+    SET estado = 'Libre'
+    WHERE idCama = @idCama;
 
     COMMIT;
-    PRINT 'Alta registrada y cama liberada.';
 END;
 GO
 
--- SP: Registrar movimiento de inventario y actualizar stock
 CREATE OR ALTER PROCEDURE sp_RegistrarMovimientoInventario
-    @idInventario    INT,
-    @tipoMovimiento  NVARCHAR(20),
-    @cantidad        INT,
-    @motivo          NVARCHAR(255) = NULL,
-    @idEmpleado      INT           = NULL
+    @idInventario INT,
+    @tipoMovimiento NVARCHAR(20),
+    @cantidad INT,
+    @motivo NVARCHAR(255) = NULL,
+    @idEmpleado INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
     BEGIN TRANSACTION;
 
     IF @tipoMovimiento = 'Salida'
     BEGIN
-        -- Verificar stock suficiente
-        IF (SELECT cantidadDisponible FROM Inventario WHERE idInventario = @idInventario) < @cantidad
+        IF (
+            SELECT cantidadDisponible
+            FROM Inventario
+            WHERE idInventario = @idInventario
+        ) < @cantidad
         BEGIN
             ROLLBACK;
-            RAISERROR('Stock insuficiente para registrar la salida.', 16, 1);
+            RAISERROR('Stock insuficiente para registrar la salida.',16,1);
             RETURN;
         END
+
         UPDATE Inventario
-        SET cantidadDisponible    = cantidadDisponible - @cantidad,
-            fechaUltimaEntrada    = GETDATE()
-        WHERE idInventario = @idInventario;
-    END
-    ELSE IF @tipoMovimiento = 'Entrada'
-    BEGIN
-        UPDATE Inventario
-        SET cantidadDisponible    = cantidadDisponible + @cantidad,
-            fechaUltimaEntrada    = GETDATE()
-        WHERE idInventario = @idInventario;
-    END
-    ELSE -- Ajuste directo (sobrescribe)
-    BEGIN
-        UPDATE Inventario
-        SET cantidadDisponible    = @cantidad,
-            fechaUltimaEntrada    = GETDATE()
+        SET cantidadDisponible = cantidadDisponible - @cantidad,
+            fechaUltimaEntrada = GETDATE()
         WHERE idInventario = @idInventario;
     END
 
-    INSERT INTO MovimientoInventario (idInventario, idEmpleado, tipoMovimiento, cantidad, motivo)
-    VALUES (@idInventario, @idEmpleado, @tipoMovimiento, @cantidad, @motivo);
+    ELSE IF @tipoMovimiento = 'Entrada'
+    BEGIN
+        UPDATE Inventario
+        SET cantidadDisponible = cantidadDisponible + @cantidad,
+            fechaUltimaEntrada = GETDATE()
+        WHERE idInventario = @idInventario;
+    END
+
+    ELSE
+    BEGIN
+        UPDATE Inventario
+        SET cantidadDisponible = @cantidad,
+            fechaUltimaEntrada = GETDATE()
+        WHERE idInventario = @idInventario;
+    END
+
+    INSERT INTO MovimientoInventario (
+        idInventario,
+        idEmpleado,
+        tipoMovimiento,
+        cantidad,
+        motivo
+    )
+    VALUES (
+        @idInventario,
+        @idEmpleado,
+        @tipoMovimiento,
+        @cantidad,
+        @motivo
+    );
 
     COMMIT;
 END;
 GO
 
--- ============================================================
---  TRIGGERS
--- ============================================================
-
--- ============================================================
---  TRIGGER 1: Alerta de inventario bajo nivel crítico
--- ============================================================
-use master;
-USE HospitalDB;
-GO
-
-IF OBJECT_ID('dbo.trg_InventarioAlerta', 'TR') IS NOT NULL
+IF OBJECT_ID('dbo.trg_InventarioAlerta','TR') IS NOT NULL
     DROP TRIGGER dbo.trg_InventarioAlerta;
-GO
-
-USE HospitalDB;
 GO
 
 CREATE TRIGGER dbo.trg_InventarioAlerta
@@ -497,26 +521,19 @@ AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
+
     SELECT
         'ALERTA: Producto [' + i.nombreProducto + '] bajo nivel critico. Stock: '
-        + CAST(i.cantidadDisponible AS NVARCHAR(10)) + ' / Critico: '
+        + CAST(i.cantidadDisponible AS NVARCHAR(10))
+        + ' / Critico: '
         + CAST(i.nivelCritico AS NVARCHAR(10)) AS Alerta
     FROM inserted i
     WHERE i.cantidadDisponible < i.nivelCritico;
 END;
 GO
 
--- ============================================================
---  TRIGGER 2: Validar y ocupar cama al registrar una internación
--- ============================================================
-USE HospitalDB;
-GO
-
-IF OBJECT_ID('dbo.trg_AsignarCamaInternacion', 'TR') IS NOT NULL
+IF OBJECT_ID('dbo.trg_AsignarCamaInternacion','TR') IS NOT NULL
     DROP TRIGGER dbo.trg_AsignarCamaInternacion;
-GO
-
-USE HospitalDB;
 GO
 
 CREATE TRIGGER dbo.trg_AsignarCamaInternacion
@@ -526,37 +543,30 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Manejar inserción de múltiples filas correctamente
     IF EXISTS (
         SELECT 1
         FROM inserted i
-        JOIN dbo.Cama c ON i.idCama = c.idCama
+        JOIN dbo.Cama c
+            ON i.idCama = c.idCama
         WHERE c.estado <> 'Libre'
     )
     BEGIN
-        RAISERROR('Una o más camas seleccionadas no están disponibles.', 16, 1);
+        RAISERROR('Una o más camas seleccionadas no están disponibles.',16,1);
         ROLLBACK TRANSACTION;
         RETURN;
     END
 
-    -- Ocupar todas las camas de las filas insertadas
     UPDATE dbo.Cama
     SET estado = 'Ocupada'
-    WHERE idCama IN (SELECT idCama FROM inserted);
+    WHERE idCama IN (
+        SELECT idCama
+        FROM inserted
+    );
 END;
 GO
 
--- ============================================================
---  TRIGGER 3: Auditoría automática de cambios en Cita
--- ============================================================
-USE HospitalDB;
-GO
-
-IF OBJECT_ID('dbo.trg_AuditoriaCita', 'TR') IS NOT NULL
+IF OBJECT_ID('dbo.trg_AuditoriaCita','TR') IS NOT NULL
     DROP TRIGGER dbo.trg_AuditoriaCita;
-GO
-
-USE HospitalDB;
 GO
 
 CREATE TRIGGER dbo.trg_AuditoriaCita
@@ -566,51 +576,64 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- UPDATE: existen filas en inserted Y en deleted
-    IF EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted)
+    IF EXISTS (SELECT 1 FROM inserted)
+    AND EXISTS (SELECT 1 FROM deleted)
     BEGIN
-        INSERT INTO dbo.LogAuditoria (tabla, operacion, idRegistro, descripcion)
+        INSERT INTO dbo.LogAuditoria (
+            tabla,
+            operacion,
+            idRegistro,
+            descripcion
+        )
         SELECT
             'Cita',
             'UPDATE',
             i.idCita,
-            'Estado anterior: ' + ISNULL(d.estado, 'N/A') + ' -> Nuevo: ' + ISNULL(i.estado, 'N/A')
+            'Estado anterior: '
+            + ISNULL(d.estado,'N/A')
+            + ' -> Nuevo: '
+            + ISNULL(i.estado,'N/A')
         FROM inserted i
-        JOIN deleted d ON i.idCita = d.idCita;
+        JOIN deleted d
+            ON i.idCita = d.idCita;
     END
 
-    -- INSERT: solo existen filas en inserted
     ELSE IF EXISTS (SELECT 1 FROM inserted)
     BEGIN
-        INSERT INTO dbo.LogAuditoria (tabla, operacion, idRegistro, descripcion)
+        INSERT INTO dbo.LogAuditoria (
+            tabla,
+            operacion,
+            idRegistro,
+            descripcion
+        )
         SELECT
             'Cita',
             'INSERT',
             idCita,
-            'Cita creada para paciente ID: ' + CAST(idPaciente AS NVARCHAR(10))
+            'Cita creada para paciente ID: '
+            + CAST(idPaciente AS NVARCHAR(10))
         FROM inserted;
     END
 
-    -- DELETE: solo existen filas en deleted
     ELSE
     BEGIN
-        INSERT INTO dbo.LogAuditoria (tabla, operacion, idRegistro, descripcion)
+        INSERT INTO dbo.LogAuditoria (
+            tabla,
+            operacion,
+            idRegistro,
+            descripcion
+        )
         SELECT
             'Cita',
             'DELETE',
             idCita,
-            'Cita eliminada. Paciente ID: ' + CAST(idPaciente AS NVARCHAR(10))
+            'Cita eliminada. Paciente ID: '
+            + CAST(idPaciente AS NVARCHAR(10))
         FROM deleted;
     END
 END;
 GO
 
-
--- ============================================================
---  VISTAS
--- ============================================================
-
--- Vista: Agenda diaria completa
 CREATE OR ALTER VIEW vw_AgendaDiaria AS
 SELECT
     c.idCita,
@@ -619,198 +642,73 @@ SELECT
     c.duracionMinutos,
     c.tipoCita,
     c.estado,
-    p.cedula            AS cedulaPaciente,
+    p.cedula AS cedulaPaciente,
     p.nombre + ' ' + p.apellido AS nombrePaciente,
-    p.telefono          AS telefonoPaciente,
+    p.telefono AS telefonoPaciente,
     m.nombre + ' ' + m.apellido AS nombreMedico,
-    e.nombre            AS especialidad,
+    e.nombre AS especialidad,
     c.notas
 FROM Cita c
-JOIN Paciente   p  ON c.idPaciente  = p.idPaciente
-JOIN Medico     m  ON c.idMedico    = m.idMedico
-JOIN Especialidad e ON m.idEspecialidad = e.idEspecialidad;
+JOIN Paciente p
+    ON c.idPaciente = p.idPaciente
+JOIN Medico m
+    ON c.idMedico = m.idMedico
+JOIN Especialidad e
+    ON m.idEspecialidad = e.idEspecialidad;
 GO
 
--- Vista: Camas con su estado actual e información de internación activa
 CREATE OR ALTER VIEW vw_EstadoCamas AS
 SELECT
     ca.idCama,
     ca.numero,
-    ca.estado           AS estadoCama,
-    d.nombre            AS departamento,
-    th.descripcion      AS tipoHabitacion,
+    ca.estado AS estadoCama,
+    d.nombre AS departamento,
+    th.descripcion AS tipoHabitacion,
     th.costoDiario,
     p.nombre + ' ' + p.apellido AS pacienteActual,
     i.fechaIngreso,
     i.motivoIngreso
 FROM Cama ca
-JOIN Departamento   d  ON ca.idDepartamento = d.idDepartamento
-JOIN TipoHabitacion th ON ca.idTipo         = th.idTipo
-LEFT JOIN Internacion i  ON ca.idCama        = i.idCama AND i.fechaEgreso IS NULL
-LEFT JOIN Paciente   p  ON i.idPaciente      = p.idPaciente;
+JOIN Departamento d
+    ON ca.idDepartamento = d.idDepartamento
+JOIN TipoHabitacion th
+    ON ca.idTipo = th.idTipo
+LEFT JOIN Internacion i
+    ON ca.idCama = i.idCama
+    AND i.fechaEgreso IS NULL
+LEFT JOIN Paciente p
+    ON i.idPaciente = p.idPaciente;
 GO
 
--- Vista: Inventario en estado crítico
 CREATE OR ALTER VIEW vw_InventarioCritico AS
 SELECT
     inv.idInventario,
-    cat.nombre              AS categoria,
+    cat.nombre AS categoria,
     inv.nombreProducto,
     inv.cantidadDisponible,
     inv.nivelCritico,
     inv.cantidadDisponible - inv.nivelCritico AS deficit,
     inv.proveedor
 FROM Inventario inv
-JOIN CategoriaInventario cat ON inv.idCategoria = cat.idCategoria
+JOIN CategoriaInventario cat
+    ON inv.idCategoria = cat.idCategoria
 WHERE inv.cantidadDisponible <= inv.nivelCritico;
 GO
 
--- Vista: Historial de citas por paciente
 CREATE OR ALTER VIEW vw_HistorialCitasPaciente AS
 SELECT
     p.idPaciente,
     p.nombre + ' ' + p.apellido AS paciente,
-    COUNT(c.idCita)             AS totalCitas,
-    SUM(CASE WHEN c.estado = 'Completada'  THEN 1 ELSE 0 END) AS completadas,
-    SUM(CASE WHEN c.estado = 'Cancelada'   THEN 1 ELSE 0 END) AS canceladas,
-    SUM(CASE WHEN c.estado = 'No asistió'  THEN 1 ELSE 0 END) AS noAsistio,
-    MAX(c.fecha)                AS ultimaCita
+    COUNT(c.idCita) AS totalCitas,
+    SUM(CASE WHEN c.estado = 'Completada' THEN 1 ELSE 0 END) AS completadas,
+    SUM(CASE WHEN c.estado = 'Cancelada' THEN 1 ELSE 0 END) AS canceladas,
+    SUM(CASE WHEN c.estado = 'No asistió' THEN 1 ELSE 0 END) AS noAsistio,
+    MAX(c.fecha) AS ultimaCita
 FROM Paciente p
-LEFT JOIN Cita c ON p.idPaciente = c.idPaciente
-GROUP BY p.idPaciente, p.nombre, p.apellido;
-GO
-
--- ============================================================
---  DATOS DE PRUEBA
--- ============================================================
-
-INSERT INTO Especialidad (nombre, descripcion) VALUES
-('Medicina General',   'Atención primaria'),
-('Cardiología',        'Enfermedades del corazón y sistema vascular'),
-('Pediatría',          'Atención a pacientes menores de 18 años'),
-('Traumatología',      'Lesiones y enfermedades del sistema músculo-esquelético'),
-('Neurología',         'Enfermedades del sistema nervioso');
-GO
-
-INSERT INTO Departamento (nombre, piso, telefono) VALUES
-('Urgencias',          1, '555-0100'),
-('Medicina Interna',   2, '555-0101'),
-('Cardiología',        3, '555-0102'),
-('Pediatría',          4, '555-0103'),
-('Quirófano',          2, '555-0104');
-GO
-
-INSERT INTO Medico (cedula, nombre, apellido, idEspecialidad, idDepartamento, telefono, email) VALUES
-('MED001', 'Carlos',   'Ramírez',   1, 2, '555-1001', 'c.ramirez@hospital.com'),
-('MED002', 'Laura',    'Mendoza',   2, 3, '555-1002', 'l.mendoza@hospital.com'),
-('MED003', 'Roberto',  'García',    3, 4, '555-1003', 'r.garcia@hospital.com');
-GO
-
-INSERT INTO HorarioMedico (idMedico, diaSemana, horaInicio, horaFin, duracionCita) VALUES
-(1, 1, '08:00', '13:00', 30),  -- Lunes
-(1, 3, '08:00', '13:00', 30),  -- Miércoles
-(1, 5, '08:00', '12:00', 30),  -- Viernes
-(2, 2, '09:00', '14:00', 45),  -- Martes
-(2, 4, '09:00', '14:00', 45),  -- Jueves
-(3, 1, '14:00', '18:00', 30),  -- Lunes tarde
-(3, 3, '14:00', '18:00', 30);  -- Miércoles tarde
-GO
-
-INSERT INTO Empleado (cedula, nombre, apellido, cargo, idDepartamento, salario) VALUES
-('EMP001', 'María',   'López',    'Recepcionista', 1, 8500.00),
-('EMP002', 'Juan',    'Torres',   'Enfermero',     2, 12000.00),
-('EMP003', 'Sofía',   'Herrera',  'Enfermera',     3, 12000.00);
-GO
-
-INSERT INTO Paciente (cedula, nombre, apellido, fechaNacimiento, sexo, tipoSangre, telefono, email, direccion,
-                      contactoEmergenciaNombre, contactoEmergenciaTelefono) VALUES
-('PAC001', 'Ana',    'Flores',   '1985-03-12', 'F', 'O+', '555-2001', 'ana.flores@mail.com',   'Av. Principal 123', 'Pedro Flores',   '555-9001'),
-('PAC002', 'Luis',   'Morales',  '1972-07-22', 'M', 'A+', '555-2002', 'luis.morales@mail.com', 'Calle 5 #456',      'Carmen Morales', '555-9002'),
-('PAC003', 'Elena',  'Vargas',   '1990-11-05', 'F', 'B-', '555-2003', NULL,                    'Col. Centro 789',   'Mario Vargas',   '555-9003');
-GO
-
-INSERT INTO HistoriaClinica (idPaciente, alergias, antecedentesPersonales) VALUES
-(1, 'Penicilina',     'Hipertensión arterial diagnosticada en 2018'),
-(2, 'Ninguna',        'Diabetes tipo 2, en tratamiento con metformina'),
-(3, 'Sulfonamidas',   'Sin antecedentes de relevancia');
-GO
-
-INSERT INTO TipoHabitacion (descripcion, costoDiario) VALUES
-('General',  500.00),
-('Privada',  1200.00),
-('UCI',      3500.00);
-GO
-
-INSERT INTO Cama (numero, idDepartamento, idTipo, estado) VALUES
-('101-A', 2, 1, 'Libre'),
-('101-B', 2, 1, 'Libre'),
-('201-P', 3, 2, 'Libre'),
-('UCI-1', 1, 3, 'Libre');
-GO
-
-INSERT INTO CategoriaInventario (nombre) VALUES
-('Medicamento'), ('Material quirúrgico'), ('Equipamiento'), ('Insumos generales');
-GO
-
-INSERT INTO Inventario (idCategoria, nombreProducto, unidadMedida, cantidadDisponible, nivelCritico, precioUnitario, proveedor) VALUES
-(1, 'Paracetamol 500mg',    'caja',   200, 50,  45.00,  'FarmaDistrib SA'),
-(1, 'Amoxicilina 500mg',    'caja',    30, 40,  85.00,  'FarmaDistrib SA'),  -- bajo nivel crítico
-(2, 'Guantes nitrilo T-M',  'caja',   500, 100, 120.00, 'MedSupply SRL'),
-(2, 'Mascarillas N95',      'pieza',   15, 50,  25.00,  'MedSupply SRL'),    -- bajo nivel crítico
-(4, 'Jeringas 5ml',         'pieza', 1000, 200,  3.50,  'MedSupply SRL');
-GO
-
--- Ejemplo de uso de stored procedures
-EXEC sp_AgendarCita
-    @idPaciente = 1,
-    @idMedico   = 1,
-    @fecha      = '2026-02-23',   -- Lunes
-    @hora       = '09:00',
-    @tipoCita   = 'Consulta',
-    @notas      = 'Primera consulta por cefalea recurrente',
-    @idEmpleado = 1;
-GO
-
-EXEC sp_AgendarCita
-    @idPaciente = 2,
-    @idMedico   = 2,
-    @fecha      = '2026-02-24',   -- Martes
-    @hora       = '10:00',
-    @tipoCita   = 'Seguimiento',
-    @notas      = 'Control de presión y electrocardiograma',
-    @idEmpleado = 1;
-GO
-
--- Internación de prueba
-INSERT INTO Internacion (idPaciente, idCama, idMedicoTratante, motivoIngreso)
-VALUES (3, 1, 1, 'Observación post-cirugía menor');
-GO
-
--- Movimiento de inventario de prueba
-EXEC sp_RegistrarMovimientoInventario
-    @idInventario   = 3,
-    @tipoMovimiento = 'Salida',
-    @cantidad       = 5,
-    @motivo         = 'Uso en sala de operaciones',
-    @idEmpleado     = 2;
-GO
-
--- ============================================================
---  CONSULTAS DE VERIFICACIÓN
--- ============================================================
-
--- Agenda del día
-SELECT * FROM vw_AgendaDiaria ORDER BY fecha, hora;
-
--- Estado de todas las camas
-SELECT * FROM vw_EstadoCamas;
-
--- Productos en nivel crítico
-SELECT * FROM vw_InventarioCritico;
-
--- Historial de citas por paciente
-SELECT * FROM vw_HistorialCitasPaciente;
-
--- Log de auditoría
-SELECT * FROM LogAuditoria ORDER BY fecha DESC;
+LEFT JOIN Cita c
+    ON p.idPaciente = c.idPaciente
+GROUP BY
+    p.idPaciente,
+    p.nombre,
+    p.apellido;
 GO
